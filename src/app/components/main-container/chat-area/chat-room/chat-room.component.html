@@ -46,12 +46,26 @@
 
       </div>
     </div>
-    <ng-container *ngIf="(typing$ | async) && !isGroupRoom">
+    <!-- <ng-container *ngIf="(typing$ | async) && !isGroupRoom">
+      <span style="color: darkgray; font-size: 13px;" >typing<span class="jumping-dots">
+        <span class="dot-1">.</span>
+        <span class="dot-2">.</span>
+        <span class="dot-3">.</span>
+      </span></span>
+    </ng-container>
+    <ng-container *ngIf="(typing$ | async) && isGroupRoom">
+      <span style="color: darkgray; font-size: 13px;"> {{ typingName }} is typing<span class="jumping-dots">
+        <span class="dot-1">.</span>
+        <span class="dot-2">.</span>
+        <span class="dot-3">.</span>
+      </span></span>
+    </ng-container> -->
+    <!-- <ng-container *ngIf="(typing$ | async) && !isGroupRoom">
       <p>typing...</p>
     </ng-container>
     <ng-container *ngIf="(typing$ | async) && isGroupRoom">
       <p> {{ typingName }} is typing...</p>
-    </ng-container>
+    </ng-container> -->
   </ng-container>
 
   <ng-template #noData>

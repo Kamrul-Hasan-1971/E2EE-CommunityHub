@@ -1,6 +1,6 @@
 import { AfterViewInit, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, NgForm, Validators } from '@angular/forms';
-import { debounceTime, Subject, Subscription, takeUntil, tap } from 'rxjs';
+import { BehaviorSubject, debounceTime, Subject, Subscription, takeUntil, tap } from 'rxjs';
 //import { PayloadProcessorService } from 'src/app/services/payloadProcessor/payload-processor.service';
 import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
 import { Utility } from 'src/app/utility/utility';
@@ -9,6 +9,8 @@ import * as uuid from 'uuid';
 import { MqttUtility } from 'src/app/utility/mqtt-utility/mqtt-utility';
 import { MqttNonPerTopic } from 'src/app/models/mqtt-non-persistent-topic-enum';
 import { MqttConnectorService } from 'src/app/services/mqtt/mqtt-connector.service';
+import { EventService } from 'src/app/services/event.service';
+import { DataStateService } from 'src/app/services/data-state.service';
 
 
 @Component({
@@ -16,7 +18,7 @@ import { MqttConnectorService } from 'src/app/services/mqtt/mqtt-connector.servi
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
-export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
+export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   subs: Subscription;
   paramValue: string;
   roomName: string = "";
@@ -24,7 +26,12 @@ export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
   sendMessageForm: FormGroup;
   destroyAllGlobalSubscriptionSubject = new Subject<any>();
   lastTypingStatusSendTime = 0;
-
+  destroyTyping = new Subject<any>();
+  typingName = '';
+  typingTimer: any;
+  typing = new BehaviorSubject<boolean>(false);
+  typing$ = this.typing.asObservable();
+  isGroupRoom: boolean = false;
 
 
   // lastActiveTime = "";
@@ -38,23 +45,52 @@ export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
 
   constructor(
     private roomService: RoomService,
-    private cdRef:ChangeDetectorRef,
+    private cdRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
     private mqttConnectorService: MqttConnectorService,
-    //private payloadProcessorService: PayloadProcessorService
-    ) {
+    //private payloadProcessorService: PayloadProcessorService,
+    private eventService: EventService,
+    private dataStateService: DataStateService,
+  ) {
   }
 
   ngAfterViewInit() {
     this.cdRef.detectChanges();
-     }
+  }
 
   ngOnInit(): void {
     this.roomNameSubscription();
     this.inputBoxVisibilitySubscription();
     this.initSenMessageForm();
-    this. onTypingMessageAction();
+    this.onTypingMessageAction();
     //this.activeStatusSubscription();
+    this.subscribeToTypingPayload();
+  }
+
+  subscribeToTypingPayload() {
+    this.destroyTyping = new Subject<any>();
+    this.eventService.typingPayload$
+      .pipe(takeUntil(this.destroyTyping))
+      .subscribe(async (payload: any) => {
+        console.log('ChatThread: Typing-payload', payload);
+        const typingPayload = { ...payload };
+        if (typingPayload.roomId == Utility.getCurrentActiveRoomId()) {
+          this.isGroupRoom = Utility.getCurrentActiveRoomId() == Utility.getCommunitityId();
+          this.typingName = this.dataStateService.getRoomNameFromRoomState(typingPayload.from);
+          this.typing.next(true);
+          //this.changeDetectorRef.detectChanges();
+          this.startTypingTimer();
+        }
+      });
+  }
+
+  startTypingTimer() {
+    clearTimeout(this.typingTimer);
+    this.typingTimer = setTimeout(() => {
+      this.typingName = '';
+      this.typing.next(false);
+      // this.changeDetectorRef.detectChanges();
+    }, 2500);
   }
 
   // activeStatusSubscription()
@@ -160,9 +196,8 @@ export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
   //   }
   // }
 
-
-  inputBoxVisibilitySubscription(){
-    this.roomService.inputBoxVisibilitySub.subscribe((inputBoxVisibility:boolean)=>{
+  inputBoxVisibilitySubscription() {
+    this.roomService.inputBoxVisibilitySub.subscribe((inputBoxVisibility: boolean) => {
       this.inputBoxVisibility = inputBoxVisibility;
     })
   }
@@ -170,6 +205,7 @@ export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
   roomNameSubscription() {
     this.roomService.roomeName.subscribe((roomName) => {
       this.roomName = roomName;
+      this.sendMessageForm.reset();
     })
   }
 
@@ -191,7 +227,7 @@ export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
           if (now - this.lastTypingStatusSendTime > 5000) {
             if (this.sendMessageForm.value.sendMessage && this.sendMessageForm.value.sendMessage.length > 0) {
               this.lastTypingStatusSendTime = now;
-              this.publishTypingStatus(Utility.getCurrentActiveRoomId());
+              this.publishTypingStatus();
             }
           }
         })
@@ -199,9 +235,9 @@ export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
       .subscribe();
   }
 
-  publishTypingStatus(roomId: string) {
+  publishTypingStatus() {
     const typingPayload = {
-      roomId: roomId,
+      roomId: (Utility.getCurrentActiveRoomId() == Utility.getCommunitityId()) ? Utility.getCommunitityId() : Utility.getCurrentUserId(),
       type: 'typing',
       from: Utility.getCurrentUserId(),
     };
@@ -209,19 +245,19 @@ export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
       'publishing typing for group',
       typingPayload,
       'in',
-      MqttUtility.parseMqttTopic(MqttNonPerTopic.typing,roomId)
+      MqttUtility.parseMqttTopic(MqttNonPerTopic.typing, Utility.getCurrentActiveRoomId())
     );
     this.mqttConnectorService.publishToNonPersistentClient(
-      MqttUtility.parseMqttTopic(MqttNonPerTopic.typing,roomId), typingPayload);
+      MqttUtility.parseMqttTopic(MqttNonPerTopic.typing, Utility.getCurrentActiveRoomId()), typingPayload);
   }
 
-  async formSubmit(){
+  async formSubmit() {
     if (this.sendMessageForm.invalid) {
       return;
     }
-    const message  = this.sendMessageForm.value.sendMessage;
+    const message = this.sendMessageForm.value.sendMessage;
     this.sendMessageForm.reset();
-    if(message) this.roomService.sendMessage.next(message);
+    if (message) this.roomService.sendMessage.next(message);
   }
 
   ngOnDestroy() {

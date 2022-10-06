@@ -2,7 +2,7 @@
   <div class="chat__header" fxLayout="row" fxLayoutGap="16">
     <img alt="avatar" mat-card-avatar src="../../../assets/account.jfif"
       [ngStyle]="{'visibility': (roomName.length>0) ? 'unset' : 'hidden'}">
-    <div fxLayout="column" fxLayoutAlign="space-around center">
+    <div fxLayout="column" fxLayoutAlign="space-around start">
       <span style="font-size: 16px; font-weight: 450;">{{ roomName}}</span>
       <!-- <p  *ngIf="isOnline">online</p>
       <p  *ngIf="!isOnline">
@@ -16,6 +16,20 @@
           {{ lastSeen && lastSeen.time | date: 'h:mm a' }}</span
         >
       </p> -->
+      <ng-container *ngIf="(typing$ | async) && !isGroupRoom">
+        <span style="color: darkgray; font-size: 13px;" >typing<span class="jumping-dots">
+          <span class="dot-1">.</span>
+          <span class="dot-2">.</span>
+          <span class="dot-3">.</span>
+        </span></span>
+      </ng-container>
+      <ng-container *ngIf="(typing$ | async) && isGroupRoom">
+        <span style="color: darkgray; font-size: 13px;"> {{ typingName }} is typing<span class="jumping-dots">
+          <span class="dot-1">.</span>
+          <span class="dot-2">.</span>
+          <span class="dot-3">.</span>
+        </span></span>
+      </ng-container>
     </div>
     <div class="chat__header__right">
       <!-- <button mat-icon-button>

@@ -41,12 +41,12 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   msgStatusChangesSub: Subscription;
   messageStatusEnum = MessageStatus;
   activeRoomMessages: any[] = [];
-  destroyTyping = new Subject<any>();
-  typingName = '';
-  typingTimer: any;
-  typing = new BehaviorSubject<boolean>(false);
-  typing$ = this.typing.asObservable();
-  isGroupRoom: boolean = false;
+  // destroyTyping = new Subject<any>();
+  // typingName = '';
+  // typingTimer: any;
+  // typing = new BehaviorSubject<boolean>(false);
+  // typing$ = this.typing.asObservable();
+  // isGroupRoom: boolean = false;
 
   //activeStatusTimer:any;
   //@ViewChild('list') list?: ElementRef<HTMLDivElement>;
@@ -66,38 +66,34 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     private signalManagerService: SignalManagerService,
     private changeDetectorRef: ChangeDetectorRef,
     private payloadProcessorService: PayloadProcessorService,
-    private eventService : EventService
+    private eventService: EventService
   ) {
   }
 
-  subscribeToTypingPayload() {
-    this.destroyTyping = new Subject<any>();
-    this.eventService.typingPayload$
-      .pipe(takeUntil(this.destroyTyping))
-      .subscribe(async (payload: any) => {
-        console.log('ChatThread: Typing-payload', payload);
-        const typingPayload = { ...payload };
-        if (typingPayload.roomId == this.roomId) {
-          let groupMember: any,
-            isShowTypingStatus = true;
-          this.typingName = this.dataStateService.getRoomNameFromRoomState(typingPayload.from);
-          if (isShowTypingStatus) {
-            this.typing.next(true);
-            this.changeDetectorRef.detectChanges();
-            this.startTypingTimer();
-          }
-        }
-      });
-  }
+  // subscribeToTypingPayload() {
+  //   this.destroyTyping = new Subject<any>();
+  //   this.eventService.typingPayload$
+  //     .pipe(takeUntil(this.destroyTyping))
+  //     .subscribe(async (payload: any) => {
+  //       console.log('ChatThread: Typing-payload', payload);
+  //       const typingPayload = { ...payload };
+  //       if (typingPayload.roomId == this.roomId) {
+  //         this.typingName = this.dataStateService.getRoomNameFromRoomState(typingPayload.from);
+  //         this.typing.next(true);
+  //         this.changeDetectorRef.detectChanges();
+  //         this.startTypingTimer();
+  //       }
+  //     });
+  // }
 
-  startTypingTimer() {
-    clearTimeout(this.typingTimer);
-    this.typingTimer = setTimeout(() => {
-      this.typingName = '';
-      this.typing.next(false);
-      this.changeDetectorRef.detectChanges();
-    }, 1500);
-  }
+  // startTypingTimer() {
+  //   clearTimeout(this.typingTimer);
+  //   this.typingTimer = setTimeout(() => {
+  //     this.typingName = '';
+  //     this.typing.next(false);
+  //     this.changeDetectorRef.detectChanges();
+  //   }, 2500);
+  // }
   openMessageStatusModal(message): void {
     let enterAnimationDuration: string = "0ms", exitAnimationDuration: string = "0ms";
     const dialogRef = this.dialog.open(MessageStatusModalComponent, {
@@ -116,18 +112,19 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = Utility.getCurrentUser();
-    if (this.roomId == Utility.getCommunitityId()) {
-      this.isGroupRoom = true;
-    }
-    else {
-      this.isGroupRoom = false;
-    }
+    // if (this.roomId == Utility.getCommunitityId()) {
+    //   this.isGroupRoom = true;
+    // }
+    // else {
+    //   this.isGroupRoom = false;
+    // }
     this.routerSubscription();
     this.sendMessageSubscription();
     this.messageChangesSubscription();
     this.msgStatusChangesSubscription();
     //this.loadMessageFormDbInitially();
     this.dbInitializationCompleteSubscription();
+    //this.subscribeToTypingPayload();
     // this.mqttConnectorService.publishActiveStatus();
     // this.activeStatusTimer = setInterval(() => {
     //   this.mqttConnectorService.publishActiveStatus();
@@ -139,12 +136,12 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
       this.roomId = params['id'];
       Utility.setCurrentActiveRoomId(this.roomId);
       if (this.roomId) {
-        if (this.roomId == Utility.getCommunitityId()) {
-          this.isGroupRoom = true;
-        }
-        else {
-          this.isGroupRoom = false;
-        }
+        // if (this.roomId == Utility.getCommunitityId()) {
+        //   this.isGroupRoom = true;
+        // }
+        // else {
+        //   this.isGroupRoom = false;
+        // }
         this.roomService.inputBoxVisibilitySub.next(true);
         if (this.dataStateService.getRoomsConversationState(this.roomId).length > 0) {
           this.activeRoomMessages = this.dataStateService.getRoomsConversationState(this.roomId);
@@ -157,10 +154,17 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         }
         this.roomService.setActiveRoomId(this.roomId);
         this.roomService.activeRoomIdSubject.next(this.roomId);
-        this.userService.getUserById(this.roomId).then((room: RoomData) => {
-          this.roomService.setActiveRoomData(room);
-          this.roomService.roomeName.next(room.name);
-        })
+        debugger
+        if (this.roomId == Utility.getCommunitityId()) {
+          this.roomService.setActiveRoomData(this.dataStateService.communityRoom);
+          this.roomService.roomeName.next(this.dataStateService.communityRoom.name);
+        }
+        else {
+          this.userService.getUserById(this.roomId).then((room: RoomData) => {
+            this.roomService.setActiveRoomData(room);
+            this.roomService.roomeName.next(room.name);
+          })
+        }
       }
       else {
         this.roomService.inputBoxVisibilitySub.next(false);
@@ -183,8 +187,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
       }
     })
   }
-
-
 
   async sendMessageSubscription() {
     this.roomService.sendMessage.subscribe(async (message) => {
@@ -315,8 +317,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.routeSub.unsubscribe();
     this.messageChangesSub.unsubscribe();
     this.msgStatusChangesSub.unsubscribe();
-    this.destroyTyping.next(false);
-    this.destroyTyping.complete();
+    // this.destroyTyping.next(false);
+    // this.destroyTyping.complete();
     //if (this.activeStatusTimer) clearInterval(this.activeStatusTimer);
   }
 
