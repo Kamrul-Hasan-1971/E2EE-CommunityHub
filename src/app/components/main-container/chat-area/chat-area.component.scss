@@ -42,9 +42,9 @@
 
   &__body_parent{
     // overflow-x: hidden;
-    // overflow-y: scroll;
+    overflow-y: scroll;
     flex:1;
-    overflow: hidden;
+    //overflow: hidden;
     padding-right: 5px;
     background-color: #d9e5e1;
     &__body_child {
@@ -58,10 +58,10 @@
     }
   }
 
-  &__body_parent:hover{
-    overflow-y: auto;
-    padding-right: 0 !important;
-  }
+  // &__body_parent:hover{
+  //   overflow-y: auto;
+  //   padding-right: 0 !important;
+  // }
 
   &__footer {
     padding-left: 1%;
@@ -110,7 +110,7 @@
 
 /* width */
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 0px;
 }
 
 /* Track */
