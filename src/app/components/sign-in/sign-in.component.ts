@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MqttNonPerCommonTopic } from 'src/app/models/mqtt-non-persistent-topic-enum';
 import { PouchDbService } from 'src/app/services/clientDB/pouch-db.service';
 import { MqttConnectorService } from 'src/app/services/mqtt/mqtt-connector.service';
 import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
+import { MqttUtility } from 'src/app/utility/mqtt-utility/mqtt-utility';
 import { Utility } from 'src/app/utility/utility';
 import { AuthService } from '../../services/auth/auth.service';
 import { UserService } from '../../services/users/user.service';
@@ -83,6 +85,10 @@ export class SignInComponent implements OnInit {
       });
     if (currentAuthUser.emailVerified && !currentUser.emailVerified) {
       currentUser.emailVerified = true;
+      let newUserCreatePublishTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.userCreate,Utility.getCommonTopicId());
+      console.log("Publishing new user create in toopic",newUserCreatePublishTopic,"currentUser payload",currentUser)
+      this.mqttConnectorService.publishToNonPersistentClient(newUserCreatePublishTopic,currentUser);
+      debugger
       Utility.setCurrentUser(currentUser);
       await this.userService.updateUser(currentUser);
     }

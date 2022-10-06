@@ -27,7 +27,6 @@ export class MqttConnectorService{
 
   mqttPayload$: Subject<any> = new Subject<any>();
   // mqttMeesagePayload$: Subject<any> = new Subject<any>();
-  commonTopicId  = "051c1e3e-b8e4-4e65-95cd-f763d2e91ba6";
   constructor( private pouchDbService : PouchDbService) { }
 
   ngOninit()
@@ -101,7 +100,7 @@ export class MqttConnectorService{
       topics.push(MqttUtility.parseMqttTopic(topic, communityId));
     }
     for (const topic of Object.values(MqttNonPerCommonTopic)) {
-      topics.push(MqttUtility.parseMqttTopic(topic, this.commonTopicId));
+      topics.push(MqttUtility.parseMqttTopic(topic, Utility.getCommonTopicId()));
     }
     this.subscribeToNonPersistentClient(topics);
   };
@@ -267,10 +266,10 @@ export class MqttConnectorService{
         'MqttConnectorService: publishing remove signal session',
         signalProtocolPayload,
         'in',
-        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession,this.commonTopicId)
+        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession,Utility.getCommonTopicId())
       );
       this.publishToNonPersistentClient(
-        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession,this.commonTopicId),
+        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession,Utility.getCommonTopicId()),
         signalProtocolPayload,
         false
       );

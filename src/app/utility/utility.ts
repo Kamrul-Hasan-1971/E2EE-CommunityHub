@@ -12,7 +12,7 @@ export class Utility {
     localStorage.setItem('mv_n_p_c', val);
   }
   static getMqttNonPersistentClient() {
-    return "nonPersistent"+this.getCurrentUserId();
+    return "nonPersistent" + this.getCurrentUserId();
     return localStorage.getItem('mv_n_p_c');
   }
   static setMqttUserName(val) {
@@ -70,7 +70,7 @@ export class Utility {
     return localStorage.getItem('refresh_token');
   }
   static setClusterId(clusterId) {
-    return localStorage.setItem('mv_cl',clusterId);
+    return localStorage.setItem('mv_cl', clusterId);
   }
   static getClusterId() {
     return "1";
@@ -94,11 +94,10 @@ export class Utility {
     return this.getCurrentUserId() === id;
   }
 
-  static oldObjectUpdateByNewObjectKey(oldObj, newObj)
-  {
+  static oldObjectUpdateByNewObjectKey(oldObj, newObj) {
     let anyKeyUpdate = false;
-    Object.keys(newObj).forEach((key)=> {
-      if(oldObj[key] != newObj[key]){
+    Object.keys(newObj).forEach((key) => {
+      if (oldObj[key] != newObj[key]) {
         oldObj[key] = newObj[key];
         anyKeyUpdate = true;
       }
@@ -106,36 +105,34 @@ export class Utility {
     return anyKeyUpdate;
   }
 
-  static sliceString(str)
-  {
-    if(str.length <= 13) return str;
-    return str.substring(0, 13)+'...';
+  static sliceString(str) {
+    if (str.length <= 13) return str;
+    return str.substring(0, 13) + '...';
   }
 
-  static setCommunitityId(communityId)
-  {
-    localStorage.setItem("communityId",communityId);
+  static setCommunitityId(communityId) {
+    localStorage.setItem("communityId", communityId);
   }
 
-  static getCommunitityId()
-  {
+  static getCommunitityId() {
     return localStorage.getItem("communityId");
   }
 
-  static setRoomCount(roomCount)
-  {
-    localStorage.setItem('roomCount',roomCount);
+  static setRoomCount(roomCount) {
+    localStorage.setItem('roomCount', roomCount);
   }
 
-  static getRoomCount()
-  {
+  static getRoomCount() {
     return localStorage.getItem('roomCount');
   }
 
-  static getMsgRoomId(messageTo, messageFrom)
-  {
-    if(messageTo == Utility.getCommunitityId()) return Utility.getCommunitityId();
-    if(messageFrom == Utility.getCurrentUserId()) return messageTo;
+  static getMsgRoomId(messageTo, messageFrom) {
+    if (messageTo == Utility.getCommunitityId()) return Utility.getCommunitityId();
+    if (messageFrom == Utility.getCurrentUserId()) return messageTo;
     return messageFrom;
+  }
+
+  static getCommonTopicId() {
+    return "051c1e3e-b8e4-4e65-95cd-f763d2e91ba6";
   }
 }

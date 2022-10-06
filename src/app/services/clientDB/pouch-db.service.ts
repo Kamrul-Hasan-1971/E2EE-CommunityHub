@@ -23,7 +23,7 @@ export class PouchDbService {
   private messageDB: any;
   //private msgStatusDB: any;
 
-  signalStoreDBName : string;
+  signalStoreDBName: string;
   messageDBName: string;
   msgStatusDBName: string;
   chatRoomDBName: string;
@@ -88,7 +88,7 @@ export class PouchDbService {
   }
 
   async saveSignalStoreData(
-    key:string, value : any
+    key: string, value: any
   ) {
     const isDbAvailable = await this.getSignalStoreDbStatus();
     if (this.authService.isLoggedIn && isDbAvailable) {
@@ -103,7 +103,7 @@ export class PouchDbService {
               return doc;
             })
             .then((res) => {
-              console.log("Signal store data save done key",key,"response",res)
+              console.log("Signal store data save done key", key, "response", res)
               resolve({
                 success: true,
               });
@@ -164,7 +164,7 @@ export class PouchDbService {
     if (this.authService.isLoggedIn && isDbAvailable) {
       const response = await this.signalStoreDB.find({
         selector: {
-          _id : Utility.getCurrentUserId()
+          _id: Utility.getCurrentUserId()
         },
       });
       return response.docs;
@@ -284,22 +284,20 @@ export class PouchDbService {
     }
   }
 
-  resolveMessageStatus(doc)
-  {
+  resolveMessageStatus(doc) {
     let deliveredCounter = doc.deliveredUsers.size;
     let readCounter = doc.readUsers.size;
-    if(readCounter == doc.roomMemberCount-1)
-    {
+
+    if (readCounter == doc.roomMemberCount) {
       doc.messageStatus = MessageStatus.read;
     }
-    else if(readCounter+deliveredCounter == doc.roomMemberCount-1)
-    {
+    else if (readCounter + deliveredCounter == doc.roomMemberCount) {
       doc.messageStatus = MessageStatus.delivered;
     }
-    else if(deliveredCounter+readCounter > 0)
-    {
+    else if (deliveredCounter + readCounter > 0) {
       doc.messageStatus = MessageStatus.sent;
     }
+    debugger
   }
 
   async saveMessageStatusToMessageDb(
@@ -319,26 +317,25 @@ export class PouchDbService {
               //common
               doc._id = messageStatus._id;
               doc.messageId = messageStatus.messageId;
-              if(!doc.deliveredUsers) doc.deliveredUsers = new Set<string>();
-              if(!doc.readUsers) doc.readUsers = new Set<string>();
+              if (!doc.deliveredUsers) doc.deliveredUsers = new Set<string>();
+              if (!doc.readUsers) doc.readUsers = new Set<string>();
               //common
-              if(messageStatus.messageStatus == MessageStatus.delivered)
-              {
-                if(!doc.readUsers.has(messageStatus.from)){
+              if (messageStatus.messageStatus == MessageStatus.delivered) {
+                if (!doc.readUsers.has(messageStatus.from)) {
                   doc.deliveredUsers.add(messageStatus.from);
                   this.resolveMessageStatus(doc);
                 }
               }
-              else if(messageStatus.messageStatus == MessageStatus.read)
-              {
+              else if (messageStatus.messageStatus == MessageStatus.read) {
                 doc.deliveredUsers.delete(messageStatus.from);
                 doc.readUsers.add(messageStatus.from);
                 this.resolveMessageStatus(doc);
               }
-              else if(messageStatus.messageStatus == MessageStatus.sent){
+              else if (messageStatus.messageStatus == MessageStatus.sent) {
                 doc.messageStatus = MessageStatus.sent;
               }
               doc.messageChangesEmit = MessageChangesEmit.messageStatus;
+              console.log("after updating message status doc",doc)
               return doc;
             })
             .then(() => {
@@ -376,16 +373,26 @@ export class PouchDbService {
         return new Promise((resolve, reject) => {
           this.messageDB
             .upsert(message._id, (doc) => {
-              if(!doc.deliveredUsers) doc.deliveredUsers = new Set<string>();
-              if(!doc.readUsers) doc.readUsers = new Set<string>();
-              message.deliveredUsers = doc.deliveredUsers;
-              message.readUsers = doc.readUsers;
+              //doc priority is most
+              if (doc.deliveredUsers) {
+                message.deliveredUsers = doc.deliveredUsers;
+              }
+              else if (!message.deliveredUsers) {
+                message.deliveredUsers = new Set<string>();
+              }
+              if (doc.readUsers) {
+                message.readUsers = doc.readUsers;
+              }
+              else if (!message.readUsers) {
+                message.readUsers = new Set<string>();
+              }
               message.messageStatus = doc.messageStatus || message.messageStatus;
               doc = message;
               doc.messageChangesEmit = MessageChangesEmit.message;
               return doc;
             })
             .then(() => {
+              console.log("after updating message doc",message)
               resolve({
                 success: true,
               });
@@ -416,10 +423,10 @@ export class PouchDbService {
       })
       .on('change', (change) => {
         if (change && change.doc) {
-          if(change.doc.messageChangesEmit == MessageChangesEmit.message){
+          if (change.doc.messageChangesEmit == MessageChangesEmit.message) {
             this.messageChanges.next(change);
           }
-          else if(change.doc.messageChangesEmit == MessageChangesEmit.messageStatus){
+          else if (change.doc.messageChangesEmit == MessageChangesEmit.messageStatus) {
             this.msgStatusChanges.next(change);
           }
         }
@@ -436,14 +443,14 @@ export class PouchDbService {
       const response = await this.messageDB.find({
         selector: {
           $or: [
-            {to: roomId },
+            { to: roomId },
           ]
         },
         //use_index: this.msgStatusIndex_msgId_status_docName,
       });
       return response.docs || [];
     }
-    else{
+    else {
       console.warn("messageDb is not available");
     }
   }
@@ -472,7 +479,7 @@ export class PouchDbService {
       });
       return response.docs || [];
     }
-    else{
+    else {
       console.warn("messageDb is not available");
     }
   }
@@ -518,16 +525,15 @@ export class PouchDbService {
     }
   }
 
-  async saveRoomsDataToChatRoomDb(chatRooms : any[])
-  {
+  async saveRoomsDataToChatRoomDb(chatRooms: any[]) {
     const promises = [];
     chatRooms.forEach(room => {
       promises.push(this.saveRoomDataToChatRoomDb(room));
     });
     const res = Promise.all(promises)
-    .catch(err=>{
-      console.error("Save rooms data to chatRoomDb error",err);
-    })
+      .catch(err => {
+        console.error("Save rooms data to chatRoomDb error", err);
+      })
     return res;
   }
 
@@ -541,7 +547,7 @@ export class PouchDbService {
         return new Promise((resolve, reject) => {
           this.chatRoomDB
             .upsert(roomData._id, (doc) => {
-              roomData.roomOrderId = roomData.roomOrderId|| 0;
+              roomData.roomOrderId = roomData.roomOrderId || 0;
               doc = roomData;
               doc.chatRoomChangesEmit = chatRoomChangesEmit.roomData;
               return doc;
@@ -631,16 +637,16 @@ export class PouchDbService {
       const response = await this.chatRoomDB.allDocs({
         include_docs: true
       })
-      .catch(function (err) {
-        console.error("Get all chat room docs error", err);
-      });
+        .catch(function (err) {
+          console.error("Get all chat room docs error", err);
+        });
       return response.rows || [];
     }
-    else{
+    else {
       console.warn("chatRoomDB is not available");
     }
   }
-  
+
   async deleteAllPouchDB() {
     const dbKeys = await (window.indexedDB as any).databases().catch((err) => {
       return null;

@@ -1,5 +1,4 @@
-
-<div  fxLayout="column" fxLayoutAlign="none" style="height: 100%; width:100%">
+<div fxLayout="column" fxLayoutAlign="none" style="height: 100%; width:100%">
     <div fxFlex="10">
         <p style="font-weight: 500; font-size:15px">Total Community Members : {{message.roomMemberCount}}</p>
     </div>
@@ -7,20 +6,16 @@
         <p>Delivered Users : {{message.deliveredUsers.size}}</p>
         <ul>
             <li *ngFor="let deliveredUserId of message.deliveredUsers">
-               <span>{{this.dataStateService.getRoomNameFromRoomState(deliveredUserId)}}</span> 
+                <span>{{this.dataStateService.getRoomNameFromRoomState(deliveredUserId)}}</span>
             </li>
-          </ul>
+        </ul>
     </div>
     <div style="max-height: 45%; font-weight: 500; font-size:15px">
-        <p>Read Users : {{message.readUsers.size}}</p>
+        <p>Read Users : {{message.readUsers.size >0 ? message.readUsers.size-1 : 0}}</p>
         <ul>
-            <li *ngFor="let readUserId of message.readUsers">
-               <span>{{this.dataStateService.getRoomNameFromRoomState(readUserId)}}</span> 
+            <li *ngFor="let readUserId of message.readUsers" [ngClass]="{ 'hide': readUserId==message.from}">
+                <span>{{this.dataStateService.getRoomNameFromRoomState(readUserId)}}</span>
             </li>
-          </ul>
+        </ul>
     </div>
 </div>
-
-
-
-

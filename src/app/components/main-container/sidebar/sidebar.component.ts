@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subject, Subscription, takeUntil } from 'rxjs';
 import { RoomData } from '../../../interfaces/roomData';
 import { UserService } from '../../../services/users/user.service';
 import { CommonService } from '../../../services/common/common.service';
@@ -14,6 +14,7 @@ import { RoomService } from '../../../services/room/room.service';
 import { LoaderService } from 'src/app/services/loader/loader.service';
 import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
 import { SignalServerStoreService } from 'src/app/services/signal/signal-server-store.service';
+import { EventService } from 'src/app/services/event.service';
 
 
 @Component({
@@ -29,6 +30,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   subs: Subscription[] = [];
   currentUser: any;
   communityRoom: RoomData;
+  destroyNewUserInCommunity = new Subject<any>();
+
 
   constructor(
     private commonService: CommonService,
@@ -42,7 +45,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private roomService: RoomService,
     private loaderService: LoaderService,
     private signalManagerService: SignalManagerService,
-    private signalServerStoreService: SignalServerStoreService
+    private signalServerStoreService: SignalServerStoreService,
+    private eventService: EventService
   ) {
   }
 
@@ -56,6 +60,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.initSearchForm();
     this.subscribeSearchBoxForm();
     this.subscribechangesRoomListForLastMessage();
+    this.subscribeToNewUserInCommunityPayload();
   }
 
   subscribechangesRoomListForLastMessage() {
@@ -141,6 +146,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   }
 
+  subscribeToNewUserInCommunityPayload() {
+    this.destroyNewUserInCommunity = new Subject<any>();
+    this.eventService.newUserInCommunity$
+      .pipe(takeUntil(this.destroyNewUserInCommunity))
+      .subscribe(async (payload: any) => {
+        console.log('New user payload', payload);
+        debugger
+        this.roomData.push(payload);
+        this.pouchDbService.saveRoomsDataToChatRoomDb([payload]);
+      });
+  }
+
 
   async getRoomData() {
     const currentUserId = Utility.getCurrentUserId();
@@ -163,7 +180,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       }
     });
     this.roomData.sort(this.compare);
-    Utility.setRoomCount(this.roomData.length);
+    Utility.setRoomCount(this.roomData.length + 1);
     this.pouchDbService.saveRoomsDataToChatRoomDb(this.roomData);
     this.pouchDbService.saveRoomsDataToChatRoomDb([this.communityRoom]);
     //this.roomData = this.roomData.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1);

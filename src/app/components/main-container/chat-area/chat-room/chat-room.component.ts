@@ -18,9 +18,10 @@ import { RoomData } from '../../../../interfaces/roomData';
 import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
 import { MessageStatus } from 'src/app/models/message-status-enum';
 import { MessageStatusDocument } from 'src/app/models/message-status-document';
-import {MatDialog, MatDialogRef} from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MessageStatusModalComponent } from 'src/app/components/modals/message-status-modal/message-status-modal.component';
 import { PayloadProcessorService } from 'src/app/services/payloadProcessor/payload-processor.service';
+import { EventService } from 'src/app/services/event.service';
 //import {AngularFirestore} from '@angular/fire/firestore';
 //import {User} from 'firebase';
 
@@ -37,15 +38,15 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   roomId: string;
   routeSub: Subscription;
   messageChangesSub: Subscription;
-  msgStatusChangesSub : Subscription;
+  msgStatusChangesSub: Subscription;
   messageStatusEnum = MessageStatus;
-  activeRoomMessages:any[] = [];
+  activeRoomMessages: any[] = [];
   destroyTyping = new Subject<any>();
   typingName = '';
   typingTimer: any;
   typing = new BehaviorSubject<boolean>(false);
   typing$ = this.typing.asObservable();
-  isGroupRoom : boolean = false;
+  isGroupRoom: boolean = false;
 
   //activeStatusTimer:any;
   //@ViewChild('list') list?: ElementRef<HTMLDivElement>;
@@ -64,13 +65,14 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private signalManagerService: SignalManagerService,
     private changeDetectorRef: ChangeDetectorRef,
-    private payloadProcessorService : PayloadProcessorService
-) {
+    private payloadProcessorService: PayloadProcessorService,
+    private eventService : EventService
+  ) {
   }
 
   subscribeToTypingPayload() {
     this.destroyTyping = new Subject<any>();
-    this.payloadProcessorService.typingPayload$
+    this.eventService.typingPayload$
       .pipe(takeUntil(this.destroyTyping))
       .subscribe(async (payload: any) => {
         console.log('ChatThread: Typing-payload', payload);
@@ -78,7 +80,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         if (typingPayload.roomId == this.roomId) {
           let groupMember: any,
             isShowTypingStatus = true;
-            this.typingName = this.dataStateService.getRoomNameFromRoomState(typingPayload.from);
+          this.typingName = this.dataStateService.getRoomNameFromRoomState(typingPayload.from);
           if (isShowTypingStatus) {
             this.typing.next(true);
             this.changeDetectorRef.detectChanges();
@@ -101,7 +103,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(MessageStatusModalComponent, {
       width: '400px',
       height: '500px',
-      data: {message: message},
+      data: { message: message },
       panelClass: 'custom-modalbox',
       enterAnimationDuration,
       exitAnimationDuration,
@@ -109,12 +111,12 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
     });
-    
+
   }
 
   ngOnInit(): void {
     this.currentUser = Utility.getCurrentUser();
-    if(this.roomId == Utility.getCommunitityId()){
+    if (this.roomId == Utility.getCommunitityId()) {
       this.isGroupRoom = true;
     }
     else {
@@ -132,60 +134,60 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     // }, 60000);
   }
 
-  routerSubscription()
-  {
+  routerSubscription() {
     this.routeSub = this.route.params.subscribe(params => {
       this.roomId = params['id'];
       Utility.setCurrentActiveRoomId(this.roomId);
       if (this.roomId) {
-        if(this.roomId == Utility.getCommunitityId()){
+        if (this.roomId == Utility.getCommunitityId()) {
           this.isGroupRoom = true;
         }
         else {
           this.isGroupRoom = false;
         }
         this.roomService.inputBoxVisibilitySub.next(true);
-        if(this.dataStateService.getRoomsConversationState(this.roomId).length > 0){
+        if (this.dataStateService.getRoomsConversationState(this.roomId).length > 0) {
           this.activeRoomMessages = this.dataStateService.getRoomsConversationState(this.roomId);
           this.scrollToId(this.activeRoomMessages[this.activeRoomMessages.length - 1].messageId);
           this.publishReadStatus();
         }
-        else{
+        else {
           this.loadMessageFormDbInitially();
           this.publishReadStatus();
         }
         this.roomService.setActiveRoomId(this.roomId);
         this.roomService.activeRoomIdSubject.next(this.roomId);
-        this.userService.getUserById(this.roomId).then((room:RoomData)=>{
+        this.userService.getUserById(this.roomId).then((room: RoomData) => {
           this.roomService.setActiveRoomData(room);
           this.roomService.roomeName.next(room.name);
         })
       }
-      else{
+      else {
         this.roomService.inputBoxVisibilitySub.next(false);
       }
     });
   }
 
   publishReadStatus() {
-    this.activeRoomMessages.forEach(message=>{
-      if(this.shouldPublishReadStatus(message)){
-        console.log("#hasan",message)
-      const statusPayload = {
-        messageId: message.messageId,
-        messageStatus: MessageStatus.read,
-        from: Utility.getCurrentUserId(),
-      };
-      console.log('Publishing read status','msgId',message.messageId,'statusPayload',statusPayload);
-      this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus,message.from),statusPayload);
-    }
+    this.activeRoomMessages.forEach(message => {
+      if (this.shouldPublishReadStatus(message)) {
+        console.log("#hasan", message)
+        const statusPayload = {
+          messageId: message.messageId,
+          messageStatus: MessageStatus.read,
+          from: Utility.getCurrentUserId(),
+        };
+        const msgRoomId = Utility.getMsgRoomId(message.to, message.from);
+        console.log('Publishing read status', 'msgId', message.messageId, 'statusPayload', statusPayload);
+        this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus, msgRoomId), statusPayload);
+      }
     })
-}
+  }
 
 
 
   async sendMessageSubscription() {
-    this.roomService.sendMessage.subscribe(async(message) => {
+    this.roomService.sendMessage.subscribe(async (message) => {
       let messageObj: MessageData = {
         messageId: uuid.v4(),
         from: Utility.getCurrentUserId(),
@@ -196,18 +198,18 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         message: message,
         isGroupRoom: false,
         roomMemberCount: 2,
-        messageStatus : MessageStatus.pending,
+        messageStatus: MessageStatus.pending,
       }
-
-      if(this.roomId == Utility.getCommunitityId()){
+      if (this.roomId == Utility.getCommunitityId()) {
         messageObj.isGroupRoom = true;
         messageObj.roomMemberCount = parseInt(Utility.getRoomCount());
       }
       const messageObjForReceiver = _.cloneDeep(messageObj);
 
-      messageObj.deliveredUsers = new Set();
-      messageObj.readUsers = new Set();
+      messageObj.deliveredUsers = new Set<string>();
+      messageObj.readUsers = new Set([Utility.getCurrentUserId()]);
 
+      debugger
       this.pouchDbService.saveMessageToMessageDb(messageObj);
       this.dataStateService.addMessageToRoomConversationState(this.roomId, messageObj);
       this.commonService.roomListChangesForLastMessage$.next(messageObj);
@@ -235,15 +237,15 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   }
 
   publishSingleMessageReadStatus(message) {
-    if(this.shouldPublishReadStatus(message)){
+    if (this.shouldPublishReadStatus(message)) {
       const statusPayload = {
         messageId: message.messageId,
         messageStatus: MessageStatus.read,
         from: Utility.getCurrentUserId(),
       };
       const msgRoomId = Utility.getMsgRoomId(message.to, message.from);
-      console.log('Publishing read status','msgId',message.messageId,'statusPayload',statusPayload);
-      this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus,msgRoomId),statusPayload);
+      console.log('Publishing read status', 'msgId', message.messageId, 'statusPayload', statusPayload);
+      this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus, msgRoomId), statusPayload);
     }
   }
 
@@ -255,46 +257,43 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     })
   }
 
-  dbInitializationCompleteSubscription()
-  {
-    this.pouchDbService.dbInitializationCompleteSubscription.subscribe(res=>{
+  dbInitializationCompleteSubscription() {
+    this.pouchDbService.dbInitializationCompleteSubscription.subscribe(res => {
       this.loadMessageFormDbInitially();
     })
   }
 
   async loadMessageFormDbInitially() {
-    let roomMessages:any[] ;
-    if(this.roomId == Utility.getCommunitityId())
-    {
+    let roomMessages: any[];
+    if (this.roomId == Utility.getCommunitityId()) {
       roomMessages = await this.pouchDbService.getCommunityRoomConversationByRoomId(this.roomId);
     }
-    else{
+    else {
       roomMessages = await this.pouchDbService.getRoomConversationByRoomId(this.roomId);
     }
-    console.log("RoomId",this.roomId,"Room messages", roomMessages);
-    if(roomMessages){
-    roomMessages = roomMessages.sort((a, b) => a.orderId > b.orderId ? 1 : -1);
-    for(let roomMessage of roomMessages){
-      this.dataStateService.addMessageToRoomConversationState(this.roomId,roomMessage);
+    console.log("RoomId", this.roomId, "Room messages", roomMessages);
+    if (roomMessages) {
+      roomMessages = roomMessages.sort((a, b) => a.orderId > b.orderId ? 1 : -1);
+      for (let roomMessage of roomMessages) {
+        this.dataStateService.addMessageToRoomConversationState(this.roomId, roomMessage);
+      }
+      this.activeRoomMessages = this.dataStateService.getRoomsConversationState(this.roomId);
+      console.log("RoomId", this.roomId, "activeRoomMessages messages", this.activeRoomMessages);
+      if (roomMessages.length > 0) {
+        this.scrollToId(roomMessages[roomMessages.length - 1].messageId);
+      }
+      this.publishReadStatus();
     }
-    this.activeRoomMessages = this.dataStateService.getRoomsConversationState(this.roomId); 
-    console.log("RoomId",this.roomId,"activeRoomMessages messages", this.activeRoomMessages);
-    if (roomMessages.length > 0) {
-      this.scrollToId(roomMessages[roomMessages.length - 1].messageId);
-    }
-    this.publishReadStatus();
-  }
   }
 
-  async encryptMessage(message: string)
-  {
-    console.log("Ongoing PlainText Message",message);
-    let encryptedMessage = await this.signalManagerService.encryptMessageAsync(Utility.getCurrentActiveRoomId(),message)
-    .catch(err=>{
-      console.error(err);
-      return message;
-    })
-    console.log("Ongoing encryptedMessage",encryptedMessage)
+  async encryptMessage(message: string) {
+    console.log("Ongoing PlainText Message", message);
+    let encryptedMessage = await this.signalManagerService.encryptMessageAsync(Utility.getCurrentActiveRoomId(), message)
+      .catch(err => {
+        console.error(err);
+        return message;
+      })
+    console.log("Ongoing encryptedMessage", encryptedMessage)
     return encryptedMessage;
   }
 
@@ -304,12 +303,11 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     }, 200)
   }
 
-  shouldPublishReadStatus(message)
-  {
-    if(!message) return false;
-    if(message.from == Utility.getCurrentUserId()) return false;
-    if(message.messageStatus == MessageStatus.read) return false;
-    if(message.readUsers.has(Utility.getCurrentUserId())) return false;
+  shouldPublishReadStatus(message) {
+    if (!message) return false;
+    if (message.from == Utility.getCurrentUserId()) return false;
+    if (message.messageStatus == MessageStatus.read) return false;
+    if (message.readUsers.has(Utility.getCurrentUserId())) return false;
     return true;
   }
 

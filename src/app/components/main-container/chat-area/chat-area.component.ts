@@ -189,7 +189,7 @@ export class ChatAreaComponent implements OnInit,OnDestroy,AfterViewInit {
           console.log('ChatThread: messageControl.valueChanges');
           const now = new Date().getTime();
           if (now - this.lastTypingStatusSendTime > 5000) {
-            if (this.sendMessageForm.value.sendMessage.length > 0) {
+            if (this.sendMessageForm.value.sendMessage && this.sendMessageForm.value.sendMessage.length > 0) {
               this.lastTypingStatusSendTime = now;
               this.publishTypingStatus(Utility.getCurrentActiveRoomId());
             }
