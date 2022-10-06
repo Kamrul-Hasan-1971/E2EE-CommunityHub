@@ -152,9 +152,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroyNewUserInCommunity))
       .subscribe(async (payload: any) => {
         console.log('New user payload', payload);
-        debugger
-        this.roomData.push(payload);
-        this.pouchDbService.saveRoomsDataToChatRoomDb([payload]);
+        const alreadyInRoomData = this.roomData.includes(payload.id);
+        if (!alreadyInRoomData) {
+          this.roomData.push(payload);
+          this.pouchDbService.saveRoomsDataToChatRoomDb([payload]);
+        }
       });
   }
 

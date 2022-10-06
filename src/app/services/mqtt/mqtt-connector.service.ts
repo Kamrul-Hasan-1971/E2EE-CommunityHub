@@ -15,7 +15,7 @@ import { MessageStatusDocument } from 'src/app/models/message-status-document';
 @Injectable({
   providedIn: 'root'
 })
-export class MqttConnectorService{
+export class MqttConnectorService {
   persistentClient: MqttClient;
   nonPersistentClient: MqttClient;
   persistentQos: any = {
@@ -27,10 +27,9 @@ export class MqttConnectorService{
 
   mqttPayload$: Subject<any> = new Subject<any>();
   // mqttMeesagePayload$: Subject<any> = new Subject<any>();
-  constructor( private pouchDbService : PouchDbService) { }
+  constructor(private pouchDbService: PouchDbService) { }
 
-  ngOninit()
-  {
+  ngOninit() {
     // this.mqttPayload$ = new Subject<any>();
     // this.mqttMeesagePayload$ = new Subject<any>();
   }
@@ -67,11 +66,15 @@ export class MqttConnectorService{
       }
     );
     this.nonPersistentClient.on('connect', this.nonPersistentConnectCallBack);
+    this.nonPersistentClient.on('subAck', this.fun2);
     this.nonPersistentClient.on('error', this.nonPerConnectErrorCallBack);
     this.nonPersistentClient.on('message', this.mqttMessageCallBack);
   }
-  fun= (response: any) => {
-    console.log("suback", response);
+  fun = (response: any) => {
+    console.log("persistentClient suback", response);
+  }
+  fun2 = (response: any) => {
+    console.log("nonPersistentClient suback", response);
   }
 
   persistentConnectCallBack = (response: any) => {
@@ -142,7 +145,7 @@ export class MqttConnectorService{
           topics,
           this.persistentQos,
           (err, granted) => {
-            console.log("granted",granted);
+            console.log("Persistent granted", granted);
             if (err) {
               console.error(
                 'MqttConnectorService: error during topic subscription for',
@@ -177,6 +180,7 @@ export class MqttConnectorService{
         topics,
         this.nonPersistentQos,
         (err, granted) => {
+          console.log("NonPersistent granted", granted);
           if (err) {
             console.error(
               'MqttConnectorService: error during topic subscription for',
@@ -253,23 +257,22 @@ export class MqttConnectorService{
     }
   }
 
-  publishRemoveSignalProtocolSession(logout=false)
-  {
+  publishRemoveSignalProtocolSession(logout = false) {
     const currentUserId = Utility.getCurrentUserId();
     const currentClusterId = Utility.getClusterId();
     if (currentUserId && currentClusterId) {
       let signalProtocolPayload = {
-        fromUserId : Utility.getCurrentUserId(),
-        logout:logout
+        fromUserId: Utility.getCurrentUserId(),
+        logout: logout
       }
       console.log(
         'MqttConnectorService: publishing remove signal session',
         signalProtocolPayload,
         'in',
-        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession,Utility.getCommonTopicId())
+        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession, Utility.getCommonTopicId())
       );
       this.publishToNonPersistentClient(
-        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession,Utility.getCommonTopicId()),
+        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession, Utility.getCommonTopicId()),
         signalProtocolPayload,
         false
       );
@@ -288,7 +291,7 @@ export class MqttConnectorService{
         topic,
         JSON.stringify(payload),
         this.persistentQos,
-        (err,res) => {
+        (err, res) => {
           if (res) {
             console.log(
               'MqttConnectorService: Published message successfully',
@@ -297,8 +300,7 @@ export class MqttConnectorService{
               payload,
               res
             );
-            if('message' in payload && payload.from == Utility.getCurrentUserId())
-            {
+            if ('message' in payload && payload.from == Utility.getCurrentUserId()) {
               const statusPayload = {
                 messageId: payload.messageId,
                 messageStatus: MessageStatus.sent,
