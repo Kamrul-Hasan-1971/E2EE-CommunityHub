@@ -1,0 +1,68 @@
+<div class="displayTable" style="background-color: #6d8986">
+  <div class="displayTableCell">
+    <div class="authBlock">
+      <h2 style="text-align: center; color: #009688;">Login To Your Account</h2>
+      <!-- <div class="formGroup">
+        <input type="text" class="formControl" placeholder="Username" #userName required />
+      </div> -->
+
+      <!-- <div class="formGroup">
+        <input type="password" class="formControl" placeholder="Password" #userPassword required />
+      </div> -->
+
+      <!-- <div class="formGroup">
+        <input type="button" class="btn btnPrimary" value="Log in" (click)="signIn()" />
+      </div> -->
+
+      <!-- Calling SignIn Api from AuthService -->
+      <form [formGroup]="loginForm" (ngSubmit)="signIn()">
+        <div class="formGroup">
+          <!-- <label for="email">Email</label> -->
+          <input type="text" placeholder="Email" formControlName="email" class="formControl"
+            [ngClass]="{ 'is-invalid': submitted && f['email'].errors }" />
+            <div *ngIf="submitted &&  this.loginForm.controls['email'].errors" >
+              <span>{{emailErrorMessage}}</span>
+            </div>
+        </div>
+        <div class="formGroup">
+          <!-- <label for="password">Password</label> -->
+          <input type="password" placeholder="Password" formControlName="password" class="formControl"
+            [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" />
+          <div *ngIf="submitted && f['password'].errors">
+            <span *ngIf="f['password']['errors']['required']">Password is required</span>
+          </div>
+        </div>
+        <div class="formGroup">
+          <button [disabled]="loading" class="btn">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+            Sign In
+          </button>
+          <!-- <a routerLink="/register" class="btn btn-link">Register</a> -->
+        </div>
+      </form>
+
+
+
+      <!-- <div class="formGroup">
+        <span class="or"><span class="orInner">Or</span></span>
+      </div> -->
+
+      <!-- Calling GoogleAuth Api from AuthService -->
+      <!-- <div class="formGroup">
+        <button type="button" class="btn googleBtn" (click)="authService.GoogleAuth()">
+          <i class="fab fa-google-plus-g"></i>
+          Log in with Google
+        </button>
+      </div> -->
+
+      <div class="forgotPassword">
+        <span (click)="redirectToForgotPassword()">Forgot Password?</span>
+      </div>
+    </div>
+
+    <div class="redirectToLogin">
+      <span>Don't have an account?<span class="redirect" (click)="redirectToSignUp()">
+          Sign Up</span></span>
+    </div>
+  </div>
+</div>

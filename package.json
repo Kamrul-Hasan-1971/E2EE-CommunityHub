@@ -8,18 +8,35 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
+  "browser": {
+    "fs": false
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "^14.2.0",
+    "@angular/cdk": "^14.0.3",
     "@angular/common": "^14.2.0",
     "@angular/compiler": "^14.2.0",
     "@angular/core": "^14.2.0",
-    "@angular/forms": "^14.2.0",
+    "@angular/fire": "^7.4.1",
+    "@angular/flex-layout": "^13.0.0-beta.38",
+    "@angular/forms": "^14.0.0",
+    "@angular/material": "^14.0.3",
     "@angular/platform-browser": "^14.2.0",
     "@angular/platform-browser-dynamic": "^14.2.0",
     "@angular/router": "^14.2.0",
+    "@privacyresearch/libsignal-protocol-typescript": "^0.0.15",
+    "@types/emscripten": "^1.39.6",
+    "firebase": "^9.6.7",
+    "mqtt": "^4.3.7",
+    "pouchdb": "^7.3.0",
+    "pouchdb-find": "^7.3.0",
+    "pouchdb-upsert": "^2.2.0",
+    "process": "^0.11.10",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
+    "url": "^0.11.0",
+    "uuid": "^9.0.0",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
@@ -33,6 +50,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.0.0",
+    "path-browserify": "^1.0.1",
     "typescript": "~4.7.2"
   }
 }

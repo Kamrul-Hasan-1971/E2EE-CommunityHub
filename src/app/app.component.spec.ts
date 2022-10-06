@@ -20,16 +20,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'CommunityHub'`, () => {
+  it(`should have as title 'mqtt'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('CommunityHub');
+    expect(app.title).toEqual('mqtt');
   });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('CommunityHub app is running!');
+    expect(compiled.querySelector('.content span')?.textContent).toContain('mqtt app is running!');
   });
 });

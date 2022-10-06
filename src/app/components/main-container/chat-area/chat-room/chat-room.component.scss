@@ -1,0 +1,70 @@
+.chat__area {
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 30px;
+//  Each individual message
+
+  &__message {
+    position: relative;
+    width:fit-content;
+    max-width: 400px;
+    min-width: 130px;
+    padding: 7px 11px 7px 11px;
+    border-radius: 5px;
+    background-color: #f6f2f2;
+    margin: 3rem 0;
+
+    &:first-child {
+      margin-top: 2rem;
+    }
+    &:last-child {
+      margin-bottom: 1rem;
+    }
+
+    &__text {
+      font-size: small;
+      max-width: inherit;
+      word-wrap:break-word;
+    }
+
+    &__name_own{
+      position: absolute;
+      top:-20px;
+      right: 4px;
+      font-size: small;
+      font-weight: 500;
+    }
+
+    &__name_other {
+      position: absolute;
+      top:-20px;
+      left:0;
+      font-size: small;
+      font-weight: 500;
+    }
+
+    &__time {
+      position: relative;
+      right:0;
+      bottom:0;
+      margin-left: 10px;
+      font-size: x-small;
+      color: darkgray;
+    }
+
+    &-owner {
+      margin-left: auto;
+      //background-color: #DCF8C6;
+      background-color: #ddf1d1;
+    }
+  }
+}
+
+.svg-icon-set-height {
+  height: 10px !important;
+}
+
+::ng-deep mat-dialog-container {
+  background-color: #3d6461!important;
+  color:#f5f0f0 !important
+}

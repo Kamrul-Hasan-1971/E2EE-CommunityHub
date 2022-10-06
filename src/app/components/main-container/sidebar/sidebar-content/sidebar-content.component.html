@@ -1,0 +1,24 @@
+<section *ngIf="roomData.id != 'a5c1d297-1efd-4f63-8121-97b2172e46bc'" class="sidebar-content" routerLink="/room/{{ roomData.id }}" [id]="roomData.id"
+  [ngStyle]="{'background-color': (active) ? 'rgb(207 220 216)' : 'rgb(247 246 246)'}" (click)="onClick()">
+  <img src="../../../../assets//account.jfif" alt="avatar" mat-card-avatar>
+  <div class="sidebar-content__room">
+    <span class="sidebar-content__room__name"
+      [ngStyle]="{'font-weight': (unreadClassActive) ? 'bold' :
+      'normal'}">{{ roomData.name }}</span>
+    <span class="sidebar-content__room__last-msg no-overflow"
+      [ngStyle]="{'font-weight': (unreadClassActive) ? 'bold' :
+      'normal'}">{{roomData.lastMessage}}</span>
+  </div>
+</section>
+<section *ngIf="roomData.id == 'a5c1d297-1efd-4f63-8121-97b2172e46bc'" class="sidebar-content community"  routerLink="/room/{{ roomData.id }}" [id]="roomData.id"
+  [ngStyle]="{'background-color': (active) ? 'rgb(33 106 99)' : '#48918a'}" (click)="onClick()">
+  <img src="../../../../../assets/user.png" alt="avatar" mat-card-avatar>
+  <div class="sidebar-content__room">
+    <span style="color:'#f5f0f0'" class="sidebar-content__room__name"
+      [ngStyle]="{'font-weight': (unreadClassActive) ? 'bold' :
+      'normal'}">{{ roomData.name }}</span>
+    <span style="color:'#f5f0f0'" class="sidebar-content__room__last-msg no-overflow"
+      [ngStyle]="{'font-weight': (unreadClassActive) ? 'bold' :
+      'normal'}">{{roomData.lastMessage}}</span>
+  </div>
+</section>

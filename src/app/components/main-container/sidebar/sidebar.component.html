@@ -1,0 +1,49 @@
+<div class="sidebar" fxLayout="column" fxLayoutAlign="start none">
+
+  <div class="sidebar__header" fxLayout="row" fxLayoutAlign=" none">
+    <div fxLayout="row" fxLayoutAlign=" center" fxFlex="90">
+        <img alt="avatar" mat-card-avatar src="../../../assets/account.jfif">
+        <p  style="font-weight: 500; margin-left: 20px; margin-bottom: 0px;">{{currentUser.name}}</p>
+    </div>
+    <div class="sidebar__header__icons" fxFlex="10">
+      <!-- <button mat-icon-button>
+        <mat-icon>donut_large</mat-icon>
+      </button> -->
+      <!-- <button mat-icon-button>
+        <mat-icon>chat</mat-icon>
+      </button> -->
+      <button [mat-menu-trigger-for]="menu" mat-icon-button>
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="logout()">Logout</button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!--  SIDEBAR-->
+  <div class="sidebar__search">
+    <div class="sidebar__search__content" fxFlex="100">
+      <form [formGroup]="searchForm">
+        <button disabled="true" style="margin-top: 5px; margin-left:10px" class="sidebar__search__content__icon" mat-icon-button>
+          <mat-icon>search_outline</mat-icon>
+        </button>
+        <input fxFlex="100" formControlName="searchBox" autocomplete="off" class="sidebar__search__content__input" name="search"
+          placeholder="Search or start new chat"
+          type="text">
+
+        <!-- <button style="display:none;" type="submit"></button> -->
+      </form>
+    </div>
+  </div>
+  <app-sidebar-content [roomData]="communityRoom">
+  </app-sidebar-content>
+  <div class="sidebar__content">
+    <!-- <span *ngIf="roomData.length>0" style="color:#009688" >Community Members</span> -->
+    <ng-container *ngFor="let r of searchfilteredRoomData; let i=index">
+      <app-sidebar-content [roomData]="r">
+      </app-sidebar-content>
+    </ng-container>
+  </div>
+
+</div>

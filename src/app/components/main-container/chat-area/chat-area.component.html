@@ -1,0 +1,60 @@
+<section class="chat">
+  <div class="chat__header" fxLayout="row" fxLayoutGap="16">
+    <img alt="avatar" mat-card-avatar src="../../../assets/account.jfif"
+      [ngStyle]="{'visibility': (roomName.length>0) ? 'unset' : 'hidden'}">
+    <div fxLayout="column" fxLayoutAlign="space-around center">
+      <span style="font-size: 16px; font-weight: 450;">{{ roomName}}</span>
+      <!-- <p  *ngIf="isOnline">online</p>
+      <p  *ngIf="!isOnline">
+        <span *ngIf="lastSeen && lastSeen.day !== null"
+          >last seen {{ lastSeen && lastSeen.day }} at
+          {{ lastSeen && lastSeen.time | date: 'h:mm a' }}</span
+        >
+        <span *ngIf="lastSeen && lastSeen.day === null"
+          >last seen
+          {{ lastSeen && lastSeen.time | date: 'dd/MM/yyyy' }} at
+          {{ lastSeen && lastSeen.time | date: 'h:mm a' }}</span
+        >
+      </p> -->
+    </div>
+    <div class="chat__header__right">
+      <!-- <button mat-icon-button>
+        <mat-icon>search_outline</mat-icon>
+      </button> -->
+      <!-- <button mat-icon-button>
+        <mat-icon class="file">attach_file</mat-icon>
+      </button> -->
+      <!-- <button mat-icon-button>
+        <mat-icon>more_vert</mat-icon>
+      </button> -->
+    </div>
+  </div>
+<div class="chat__body_parent">
+  <div class="chat__body_child">
+    <router-outlet></router-outlet>
+    <!-- <router-outlet (activate)="chatData($event)"></router-outlet> -->
+  </div>
+</div>
+  
+  <div *ngIf="inputBoxVisibility" class="chat__footer">
+    <!-- <button mat-icon-button>
+      <mat-icon>mood</mat-icon>
+    </button> -->
+
+    <form [formGroup]="sendMessageForm" (ngSubmit)="formSubmit()">
+
+      <input type="text" formControlName="sendMessage" class="formControl" autocomplete="off" placeholder="Type a message"
+        class="chat__footer__send-message">
+
+      <!-- <button style="background-color:#009688" type="submit">Send</button> -->
+
+      <button class="btn btn-primary"  type="submit">Send</button>
+
+      <!-- <button type="submit" style="display: none;"></button> -->
+    </form>
+
+    <!-- <button mat-icon-button>
+      <mat-icon>mic</mat-icon>
+    </button> -->
+  </div>
+</section>

@@ -1,0 +1,111 @@
+<div class="displayTable" style="background-color: #6d8986;">
+  <div class="displayTableCell">
+    <div class="authBlock">
+      <h2 style="text-align: center; color: #009688;">Create Account</h2>
+
+
+      <form autocomplete="off" [formGroup]="registerForm" (ngSubmit)="signUp()">
+        <div class="formGroup">
+          <!-- <label for="name">Name</label> -->
+          <input type="text" placeholder="Name" formControlName="name" class="formControl"
+            [ngClass]="{ 'is-invalid': submitted && this.registerForm.controls['name'].errors }" />
+          <div *ngIf="submitted && this.registerForm.controls['name'].errors">
+            <span *ngIf="this.registerForm.controls['name']['errors']['required']">Name is
+              required</span>
+          </div>
+        </div>
+        <div class="formGroup">
+          <!-- <label for="email">Email</label> -->
+          <input type="text" placeholder="Email Address" formControlName="email" class="formControl"
+            [ngClass]="{ 'is-invalid': submitted && this.registerForm.controls['email'].errors }" />
+          <div *ngIf="submitted &&  this.registerForm.controls['email'].errors" >
+            <span>{{emailErrorMessage}}</span>
+          </div>
+        </div>
+        <div class="formGroup">
+          <!-- <label for="password">Password</label> -->
+          <input type="password" placeholder="Password" formControlName="password" class="formControl"
+            [ngClass]="{ 'is-invalid': submitted && this.registerForm.controls['password'].errors }" />
+          <div *ngIf="submitted && this.registerForm.controls['password'].errors">
+            <span *ngIf="this.registerForm.controls['password']['errors']['required']">Password is
+              required</span>
+            <span *ngIf="this.registerForm.controls['password']['errors']['minlength']">Password must be
+              at least 6 characters
+            </span>
+          </div>
+        </div>
+        <div class="formGroup">
+          <button [disabled]="loading" class="btn">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+            Sign Up
+          </button>
+          <!-- <a routerLink="/login" class="btn btn-link">Cancel</a> -->
+        </div>
+      </form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <!-- <div class="formGroup">
+        <input
+          type="email"
+          class="formControl"
+          placeholder="Email Address"
+          #userEmail
+          required
+        />
+      </div> -->
+
+      <!-- <div class="formGroup">
+        <input
+          type="password"
+          class="formControl"
+          placeholder="Password"
+          #userPwd
+          required
+        />
+      </div> -->
+
+      <!-- <div class="formGroup">
+        <input
+          type="button"
+          class="btn btnPrimary"
+          value="Sign Up"
+          (click)="authService.SignUp(userEmail.value, userPwd.value)"
+        />
+      </div> -->
+
+      <!-- <div class="formGroup">
+        <span class="or"><span class="orInner">Or</span></span>
+      </div> -->
+
+      <!-- Continue with Google -->
+      <!-- <div class="formGroup">
+        <button
+          type="button"
+          class="btn googleBtn"
+          (click)="authService.GoogleAuth()"
+        >
+          <i class="fab fa-google-plus-g"></i>
+          Continue with Google
+        </button>
+      </div> -->
+    </div>
+
+    <div class="redirectToLogin">
+      <span
+        >Already have an account?
+        <span class="redirect" (click)="redirectToSignIn()">Log In</span></span
+      >
+    </div>
+  </div>
+</div>

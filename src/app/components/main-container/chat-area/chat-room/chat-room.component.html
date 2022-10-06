@@ -1,0 +1,61 @@
+<div class="chat__area">
+  <ng-container *ngIf="activeRoomMessages?.length > 0; else noData">
+    <div *ngFor="let m of activeRoomMessages" id="{{'s'+m.messageId}}"
+      [ngClass]="{'chat__area__message-owner': currentUser.id === m.from}" class="chat__area__message">
+      <p [ngClass]="currentUser.id === m.from? 'chat__area__message__name_own':'chat__area__message__name_other'">{{
+        m?.name }}</p>
+      <p class="chat__area__message__text" style="margin: 0;">{{ m.message }}</p>
+      <div fxLayout="row" fxLayoutAlign="end center">
+        <span class="chat__area__message__time">{{ m?.time | date:'shortTime' }}</span>
+
+
+        <span *ngIf="!m.isGroupRoom">
+          <span *ngIf="currentUser.id != m.from" style="margin-left: 8px;"></span>
+          <span *ngIf="currentUser.id === m.from && m.messageStatus == messageStatusEnum.pending"
+            style="margin-left: 8px;"><img class="svg-icon-set-height" src="../../../../../assets/Pending.svg"
+              alt="" /></span>
+          <span *ngIf="currentUser.id === m.from && m.messageStatus == messageStatusEnum.sent"
+            style="margin-left: 8px;"><img class="svg-icon-set-height" src="../../../../../assets/Sent.svg"
+              alt="" /></span>
+          <span *ngIf="currentUser.id === m.from && m.messageStatus == messageStatusEnum.delivered"
+            style="margin-left: 8px;"><img class="svg-icon-set-height" src="../../../../../assets/Delivered.svg"
+              alt="" /></span>
+          <span *ngIf="currentUser.id === m.from && m.messageStatus == messageStatusEnum.read"
+            style="margin-left: 8px;"><img class="svg-icon-set-height" src="../../../../../assets/Seen.svg"
+              alt="" /></span>
+        </span>
+
+
+        <span type="submit" (click)="openMessageStatusModal(m)" *ngIf="m.isGroupRoom">
+          <span *ngIf="m.readUsers.size <= 0 && m.messageStatus == messageStatusEnum.pending"
+            style="margin-left: 8px;"><img class="svg-icon-set-height" src="../../../../../assets/Pending.svg"
+              alt="" /></span>
+          <span *ngIf="m.readUsers.size <= 0 && m.messageStatus == messageStatusEnum.sent"
+            style="margin-left: 8px;"><img class="svg-icon-set-height" src="../../../../../assets/Sent.svg"
+              alt="" /></span>
+          <span *ngIf="m.readUsers.size <= 0 && m.messageStatus == messageStatusEnum.delivered"
+            style="margin-left: 8px;"><img class="svg-icon-set-height" src="../../../../../assets/Delivered.svg"
+              alt="" /></span>
+          <span *ngIf="m.messageStatus != messageStatusEnum.read && m.readUsers.size > 0" style="margin-left: 8px;"><img
+              class="svg-icon-set-height" src="../../../../../assets/eye-icon.svg" alt="" /><span style="margin-left: 5px;
+              font-size: x-small; color: darkgray;">{{m.readUsers.size}}</span></span>
+          <span *ngIf="m.messageStatus == messageStatusEnum.read" style="margin-left: 8px;"><img
+              class="svg-icon-set-height" src="../../../../../assets/eye-icon-blue.svg" alt="" /></span>
+        </span>
+
+
+      </div>
+    </div>
+    <ng-container *ngIf="(typing$ | async) && !isGroupRoom">
+      <p >typing...</p>
+    </ng-container>
+    <ng-container *ngIf="(typing$ | async) && isGroupRoom">
+      <p> {{ typingName }} is typing...</p>
+    </ng-container>
+  </ng-container>
+
+  <ng-template #noData>
+    <!-- <h1 style="text-align: center">No Messages</h1> -->
+  </ng-template>
+
+</div>

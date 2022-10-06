@@ -1,0 +1,26 @@
+
+<div  fxLayout="column" fxLayoutAlign="none" style="height: 100%; width:100%">
+    <div fxFlex="10">
+        <p style="font-weight: 500; font-size:15px">Total Community Members : {{message.roomMemberCount}}</p>
+    </div>
+    <div style="max-height: 45%; font-weight: 500; font-size:15px">
+        <p>Delivered Users : {{message.deliveredUsers.size}}</p>
+        <ul>
+            <li *ngFor="let deliveredUserId of message.deliveredUsers">
+               <span>{{this.dataStateService.getRoomNameFromRoomState(deliveredUserId)}}</span> 
+            </li>
+          </ul>
+    </div>
+    <div style="max-height: 45%; font-weight: 500; font-size:15px">
+        <p>Read Users : {{message.readUsers.size}}</p>
+        <ul>
+            <li *ngFor="let readUserId of message.readUsers">
+               <span>{{this.dataStateService.getRoomNameFromRoomState(readUserId)}}</span> 
+            </li>
+          </ul>
+    </div>
+</div>
+
+
+
+

@@ -1,0 +1,14 @@
+<!-- //#DADBD3
+//#A3C9FA -->
+<svg width="29" height="15" viewBox="0 0 29 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0)">
+<rect x="0.703125" y="0.703125" width="13.5938" height="13.5938" rx="2.10938" stroke="#A3C9FA" stroke-width="1.40625"/>
+<rect width="1.45939" height="6.14413" rx="0.703125" transform="matrix(0.999954 -0.00960872 0.214465 0.976732 5.34937 3.39062)" fill="#b5b6ad"/>
+<rect width="3.89171" height="1.3166" rx="0.6583" transform="matrix(0.999954 -0.00960872 0.214465 0.976732 6.38477 8.10547)" fill="#b5b6ad"/>
+</g>
+<defs>
+<clipPath id="clip0">
+<rect width="28.125" height="15" fill="white"/>
+</clipPath>
+</defs>
+</svg>
