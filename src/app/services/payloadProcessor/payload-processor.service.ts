@@ -34,7 +34,7 @@ export class PayloadProcessorService {
   }
 
   init() {
-    
+
   }
 
   async decryptMessage(senderId, message: string) {
@@ -84,7 +84,9 @@ export class PayloadProcessorService {
             'topic, payload:',
             payload
           );
-          this.eventService.typingPayload$.next(payload);
+          if (payload.from != Utility.getCurrentUserId()) {
+            this.eventService.typingPayload$.next(payload);
+          }
         }
         else if (topic.endsWith(MqttNonPerCommonTopic.userCreate)) {
           console.log(
