@@ -1,6 +1,8 @@
 <section class="chat">
   <div class="chat__header" fxLayout="row" fxLayoutGap="16">
-    <img alt="avatar" mat-card-avatar src="../../../assets/account.jfif"
+    <img *ngIf="!isGroupRoom" alt="avatar" mat-card-avatar src="../../../assets/account.jfif"
+      [ngStyle]="{'visibility': (this.room && this.room.name.length>0) ? 'unset' : 'hidden'}">
+    <img *ngIf="isGroupRoom" alt="avatar" mat-card-avatar src="../../../assets/user-group.png"
       [ngStyle]="{'visibility': (this.room && this.room.name.length>0) ? 'unset' : 'hidden'}">
     <div fxLayout="column" fxLayoutAlign="space-around start">
       <span style="font-size: 16px; font-weight: 450;">{{ this.room?.name}}</span>

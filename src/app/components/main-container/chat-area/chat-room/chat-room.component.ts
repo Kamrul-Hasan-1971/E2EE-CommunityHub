@@ -133,6 +133,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
       if (this.roomId) {
         Utility.setCurrentActiveRoomId(this.roomId);
         this.room = await this.roomService.getRoomDataByRoomID(this.roomId);
+        this.roomService.roomeChange.next(this.roomId);
+
         // if (this.roomId == Utility.getCommunitityId()) {
         //   this.isGroupRoom = true;
         // }
@@ -154,7 +156,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
         // if (this.roomId == Utility.getCommunitityId()) {
         //   this.roomService.setActiveRoomData(this.dataStateService.communityRoom);
-        this.roomService.roomeChange.next(this.roomId);
         //}
         // else {
         //   const room: RoomData = await this.userService.getUserById(this.roomId) as RoomData;

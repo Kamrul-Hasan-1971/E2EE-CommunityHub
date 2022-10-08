@@ -86,7 +86,7 @@ export class PayloadProcessorService {
             this.eventService.newUserInCommunity$.next(payload);
           }
         }
-        else if (topic.endsWith(MqttNonPerCommonTopic.activeStatus)) {
+        else if (topic.endsWith(MqttNonPerTopic.activeStatus)) {
           console.log('Received mqtt user online status payload', payload);
           if (payload.from != Utility.getCurrentUserId()) {
             this.eventService.activeStatusPayload$.next(payload);

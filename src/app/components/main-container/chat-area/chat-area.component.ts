@@ -146,6 +146,18 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   roomChangeSubscription() {
     this.roomService.roomeChange.subscribe(async (roomId) => {
+
+      if(this.room && this.room.id != Utility.getCommunitityId())
+      {
+        const previousRoomTopic = MqttUtility.parseMqttTopic(MqttNonPerTopic.activeStatus,this.room.id);
+        this.mqttConnectorService.unsubscribeSigleNonPersistentTopic(previousRoomTopic);
+      }
+      if(roomId != Utility.getCommunitityId()){
+        const roomTopic = MqttUtility.parseMqttTopic(MqttNonPerTopic.activeStatus,roomId);
+        this.mqttConnectorService.subscribeToNonPersistentClient([roomTopic]);
+      }
+
+
       this.sendMessageForm.reset();
       this.isGroupRoom = Utility.getCurrentActiveRoomId() == Utility.getCommunitityId();
       debugger

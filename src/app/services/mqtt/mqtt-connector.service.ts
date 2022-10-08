@@ -99,8 +99,10 @@ export class MqttConnectorService {
     let topics = [];
     const communityId = Utility.getCommunitityId();
     for (const topic of Object.values(MqttNonPerTopic)) {
-      topics.push(MqttUtility.parseMqttTopic(topic, Utility.getCurrentUserId()));
-      topics.push(MqttUtility.parseMqttTopic(topic, communityId));
+      if(topic != MqttNonPerTopic.activeStatus){
+        topics.push(MqttUtility.parseMqttTopic(topic, Utility.getCurrentUserId()));
+        topics.push(MqttUtility.parseMqttTopic(topic, communityId));
+      }
     }
     for (const topic of Object.values(MqttNonPerCommonTopic)) {
       topics.push(MqttUtility.parseMqttTopic(topic, Utility.getCommonTopicId()));
@@ -206,6 +208,32 @@ export class MqttConnectorService {
     }
   }
 
+  unsubscribeSigleNonPersistentTopic(topic:string)
+  {
+    if (this.nonPersistentClient) {
+      this.nonPersistentClient.unsubscribe(
+        MqttUtility.parseMqttTopic(topic, Utility.getCurrentUserId()),
+        this.nonPersistentQos
+      );
+      console.log(
+        `MqttConnectorService: unsubscribed to non-persistent topic : ${topic}`
+      );
+    }
+  }
+
+  unsubscribeSiglePersistentTopic(topic:string)
+  {
+    if (this.persistentClient) {
+      this.persistentClient.unsubscribe(
+        MqttUtility.parseMqttTopic(topic, Utility.getCurrentUserId()),
+        this.persistentQos
+      );
+      console.log(
+        `MqttConnectorService: unsubscribed to persistent topic : ${topic}`
+      );
+    }
+  }
+
   unsubscribe(): void {
     for (const topic in MqttPerTopic) {
       if (this.persistentClient) {
@@ -240,7 +268,7 @@ export class MqttConnectorService {
         lastSeen: Date.now(),
       },
     };
-    const activeStatusTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.activeStatus, Utility.getCommonTopicId());
+    const activeStatusTopic = MqttUtility.parseMqttTopic(MqttNonPerTopic.activeStatus, Utility.getCurrentUserId());
     console.log('publishing user status', statusPayload, 'in', activeStatusTopic);
     this.publishToNonPersistentClient(activeStatusTopic, statusPayload, true);
   }
