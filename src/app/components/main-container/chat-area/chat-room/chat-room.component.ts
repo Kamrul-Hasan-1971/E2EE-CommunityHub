@@ -130,7 +130,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   routerSubscription() {
     this.routeSub = this.route.params.subscribe(async (params) => {
       this.roomId = params['id'];
-      debugger
       if (this.roomId) {
         Utility.setCurrentActiveRoomId(this.roomId);
         this.room = await this.roomService.getRoomDataByRoomID(this.roomId);
@@ -175,7 +174,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   publishReadStatus() {
     this.activeRoomMessages.forEach(message => {
       if (this.shouldPublishReadStatus(message)) {
-        // console.log("#hasan", message)
+        console.log("#hasan", message)
         const statusPayload = {
           messageId: message.messageId,
           messageStatus: MessageStatus.read,
