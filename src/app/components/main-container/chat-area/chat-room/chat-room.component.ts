@@ -36,6 +36,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   currentUser: any;
   item;
   roomId: string;
+  room: RoomData;
   routeSub: Subscription;
   messageChangesSub: Subscription;
   msgStatusChangesSub: Subscription;
@@ -48,7 +49,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   // typing$ = this.typing.asObservable();
   // isGroupRoom: boolean = false;
 
-  //activeStatusTimer:any;
   //@ViewChild('list') list?: ElementRef<HTMLDivElement>;
   @Output() chatData: EventEmitter<any> = new EventEmitter<any>();
 
@@ -125,17 +125,14 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     //this.loadMessageFormDbInitially();
     this.dbInitializationCompleteSubscription();
     //this.subscribeToTypingPayload();
-    // this.mqttConnectorService.publishActiveStatus();
-    // this.activeStatusTimer = setInterval(() => {
-    //   this.mqttConnectorService.publishActiveStatus();
-    // }, 60000);
   }
 
   routerSubscription() {
-    this.routeSub = this.route.params.subscribe(params => {
+    this.routeSub = this.route.params.subscribe(async (params) => {
       this.roomId = params['id'];
-      Utility.setCurrentActiveRoomId(this.roomId);
       if (this.roomId) {
+        Utility.setCurrentActiveRoomId(this.roomId);
+        this.room = await this.roomService.getRoomDataByRoomID(this.roomId);
         // if (this.roomId == Utility.getCommunitityId()) {
         //   this.isGroupRoom = true;
         // }
@@ -152,19 +149,18 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
           this.loadMessageFormDbInitially();
           this.publishReadStatus();
         }
-        this.roomService.setActiveRoomId(this.roomId);
+        // this.roomService.setActiveRoomId(this.roomId);
         this.roomService.activeRoomIdSubject.next(this.roomId);
-        debugger
-        if (this.roomId == Utility.getCommunitityId()) {
-          this.roomService.setActiveRoomData(this.dataStateService.communityRoom);
-          this.roomService.roomeName.next(this.dataStateService.communityRoom.name);
-        }
-        else {
-          this.userService.getUserById(this.roomId).then((room: RoomData) => {
-            this.roomService.setActiveRoomData(room);
-            this.roomService.roomeName.next(room.name);
-          })
-        }
+
+        // if (this.roomId == Utility.getCommunitityId()) {
+        //   this.roomService.setActiveRoomData(this.dataStateService.communityRoom);
+        this.roomService.roomeChange.next(this.roomId);
+        //}
+        // else {
+        //   const room: RoomData = await this.userService.getUserById(this.roomId) as RoomData;
+        //   this.roomService.setActiveRoomData(room);
+        //   this.roomService.roomeChange.next(this.roomId);
+        // }
       }
       else {
         this.roomService.inputBoxVisibilitySub.next(false);
@@ -211,7 +207,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
       messageObj.deliveredUsers = new Set<string>();
       messageObj.readUsers = new Set([Utility.getCurrentUserId()]);
 
-      debugger
       this.pouchDbService.saveMessageToMessageDb(messageObj);
       this.dataStateService.addMessageToRoomConversationState(this.roomId, messageObj);
       this.commonService.roomListChangesForLastMessage$.next(messageObj);
@@ -319,7 +314,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.msgStatusChangesSub.unsubscribe();
     // this.destroyTyping.next(false);
     // this.destroyTyping.complete();
-    //if (this.activeStatusTimer) clearInterval(this.activeStatusTimer);
   }
 
 }

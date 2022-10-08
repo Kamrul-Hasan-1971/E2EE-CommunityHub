@@ -18,7 +18,6 @@ import { EventService } from '../event.service';
 })
 export class PayloadProcessorService {
   private destroyed$ = new Subject();
-  public activeStatusPayload$ = new Subject();
 
   constructor(
     private mqttConnectorService: MqttConnectorService,
@@ -52,64 +51,47 @@ export class PayloadProcessorService {
       .subscribe(async (mqttPayload: any) => {
         const { topic, payload } = mqttPayload;
         if (topic.endsWith(MqttNonPerCommonTopic.removeSignalProtocolSession)) {
-          this.signalManagerService.removeSessionFromUser(payload);
+          if (payload.from != Utility.getCurrentUserId()) {
+            this.signalManagerService.removeSessionFromUser(payload);
+          }
         }
         else if (topic.endsWith(MqttPerTopic.roomInbox)) {
-          if (payload.from == Utility.getCurrentUserId()) { // For handling community room self message
-            return;
-          }
-          //initiate
-          payload.deliveredUsers = new Set<string>();
-          payload.readUsers = new Set([payload.from]);
-          payload.messageStatus = MessageStatus.delivered;
+          if (payload.from != Utility.getCurrentUserId()) { // For handling community room self message
+            //initiate
+            payload.deliveredUsers = new Set<string>();
+            payload.readUsers = new Set([payload.from]);
+            payload.messageStatus = MessageStatus.delivered;
 
-          console.log("Encrypted incomeing Message", payload.message);
-          payload.message = await this.decryptMessage(payload.from, payload.message);
-          console.log("After decrypte incomeing Message", payload.message);
-          this.commonService.roomListChangesForLastMessage$.next(payload);
-          this.pouchDbService.saveMessageToMessageDb(payload);
-          this.publishMessageDeliveredStatus(payload);
+            console.log("Encrypted incomeing Message", payload.message);
+            payload.message = await this.decryptMessage(payload.from, payload.message);
+            console.log("After decrypte incomeing Message", payload.message);
+            this.commonService.roomListChangesForLastMessage$.next(payload);
+            this.pouchDbService.saveMessageToMessageDb(payload);
+            this.publishMessageDeliveredStatus(payload);
+          }
         }
         else if (topic.endsWith("/" + MqttPerTopic.messageStatus)) {
           console.log('payload received from', payload.from, 'with messageId', payload.messageId, 'in', topic, 'topic, payload:', payload);
           this.pouchDbService.saveMessageStatusToMessageDb(payload);
         }
         else if (topic.endsWith(MqttNonPerTopic.typing)) {
-          console.log(
-            'MQTT typing',
-            'payload received with messageId',
-            payload.messageId || '',
-            'in',
-            topic,
-            'topic, payload:',
-            payload
-          );
           if (payload.from != Utility.getCurrentUserId()) {
+            console.log('MQTT typing', 'payload received with messageId', payload.messageId || '', 'in', topic, 'topic, payload:', payload);
             this.eventService.typingPayload$.next(payload);
           }
         }
         else if (topic.endsWith(MqttNonPerCommonTopic.userCreate)) {
-          console.log(
-            'MQTT userCreate',
-            'payload received with userId',
-            payload.id || '',
-            'in',
-            topic,
-            'topic, payload:',
-            payload
-          );
-          debugger
           if (payload.id != Utility.getCurrentUserId()) {
+            console.log('MQTT userCreate', 'payload received with userId', payload.id || '', 'in', topic, 'topic, payload:', payload);
             this.eventService.newUserInCommunity$.next(payload);
           }
         }
-        // else if (topic.endsWith(MqttNonPerTopic.activeStatus)) {
-        //   console.log(
-        //     'PayloadProcessorService: Received mqtt user online status payload',
-        //     payload
-        //   );
-        //   this.activeStatusPayload$.next(payload);
-        // }
+        else if (topic.endsWith(MqttNonPerCommonTopic.activeStatus)) {
+          console.log('Received mqtt user online status payload', payload);
+          if (payload.from != Utility.getCurrentUserId()) {
+            this.eventService.activeStatusPayload$.next(payload);
+          }
+        }
       });
   }
 

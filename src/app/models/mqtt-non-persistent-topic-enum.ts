@@ -1,5 +1,4 @@
 export enum MqttNonPerTopic {
- // activeStatus = 'activeStatus',
   typing = 'typing',
   callEvents = 'call_events',
 }
@@ -7,4 +6,5 @@ export enum MqttNonPerTopic {
 export enum MqttNonPerCommonTopic {
   removeSignalProtocolSession = 'removeSignalProtocolSession',
   userCreate = 'userCreate',
+  activeStatus = 'activeStatus',
 }

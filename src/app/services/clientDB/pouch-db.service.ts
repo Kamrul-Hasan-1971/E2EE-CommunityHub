@@ -297,7 +297,6 @@ export class PouchDbService {
     else if (deliveredCounter + readCounter > 0) {
       doc.messageStatus = MessageStatus.sent;
     }
-    debugger
   }
 
   async saveMessageStatusToMessageDb(
@@ -546,7 +545,7 @@ export class PouchDbService {
         roomData._id = roomData.id;
         return new Promise((resolve, reject) => {
           this.chatRoomDB
-            .upsert(roomData._id, (doc) => {
+          .upsert(roomData._id, (doc) => {
               roomData.roomOrderId = roomData.roomOrderId || 0;
               doc = roomData;
               doc.chatRoomChangesEmit = chatRoomChangesEmit.roomData;
@@ -630,6 +629,24 @@ export class PouchDbService {
   //       return null;
   //     });
   // }
+
+  async getChatRoomByRoomId(roomId) {
+    const isDbAvailable = await this.getChatRoomDbStatus();
+    if (this.authService.isLoggedIn && isDbAvailable) {
+      const room = await this.chatRoomDB.find({
+        selector: {
+          id: roomId,
+        },
+      })
+      .catch((err)=> {
+        console.error("Get all chat room docs error", err);
+      });
+      return room.docs &&  room.docs[0];
+    }
+    else {
+      console.warn("chatRoomDB is not available");
+    }
+  }
 
   async getAllChatRoom() {
     const isDbAvailable = await this.getChatRoomDbStatus();

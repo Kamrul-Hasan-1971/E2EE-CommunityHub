@@ -7,5 +7,7 @@ import { Subject } from 'rxjs';
 export class EventService {
   newUserInCommunity$ = new Subject<any>();
   typingPayload$ = new Subject<any>();
+  activeStatusPayload$ = new Subject<any>();
+
   constructor() { }
 }

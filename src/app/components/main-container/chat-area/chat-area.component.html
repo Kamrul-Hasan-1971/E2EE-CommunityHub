@@ -1,9 +1,9 @@
 <section class="chat">
   <div class="chat__header" fxLayout="row" fxLayoutGap="16">
     <img alt="avatar" mat-card-avatar src="../../../assets/account.jfif"
-      [ngStyle]="{'visibility': (roomName.length>0) ? 'unset' : 'hidden'}">
+      [ngStyle]="{'visibility': (this.room && this.room.name.length>0) ? 'unset' : 'hidden'}">
     <div fxLayout="column" fxLayoutAlign="space-around start">
-      <span style="font-size: 16px; font-weight: 450;">{{ roomName}}</span>
+      <span style="font-size: 16px; font-weight: 450;">{{ this.room?.name}}</span>
       <!-- <p  *ngIf="isOnline">online</p>
       <p  *ngIf="!isOnline">
         <span *ngIf="lastSeen && lastSeen.day !== null"
@@ -30,6 +30,28 @@
           <span class="dot-3">.</span>
         </span></span>
       </ng-container>
+      <ng-container *ngIf="!(typing$ | async)&& !isGroupRoom">
+        <span class="typing-font" *ngIf="isOnline">online</span>
+        <span class=" typing-font" *ngIf="!isOnline">
+          <span *ngIf="lastSeen && lastSeen.day !== null"
+            >last seen {{ lastSeen && lastSeen.day }} at
+            {{ lastSeen && lastSeen.time | date: 'h:mm a' }}</span
+          >
+          <span *ngIf="lastSeen && lastSeen.day === null"
+            >last seen
+            {{ lastSeen && lastSeen.time | date: 'dd/MM/yyyy' }} at
+            {{ lastSeen && lastSeen.time | date: 'h:mm a' }}</span
+          >
+        </span>
+      </ng-container>
+      <!-- <ng-container *ngIf="!(typing$ | async) && this.lastSeen && !this.isOnline">
+        <span style="color: darkgray; font-size: 13px;">{{this.lastSeen.day }}{{this.lastSeen.time| date:'shortTime'}}</span>
+      </ng-container>
+      <ng-container *ngIf="!(typing$ | async) && this.isOnline">
+        <span style="color: rgb(151 215 151);
+        font-size: 12px;
+        font-weight: 500;">Active</span>
+      </ng-container> -->
     </div>
     <div class="chat__header__right">
       <!-- <button mat-icon-button>

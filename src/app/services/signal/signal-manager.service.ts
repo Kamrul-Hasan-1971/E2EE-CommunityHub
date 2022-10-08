@@ -29,11 +29,11 @@ export class SignalManagerService {
 
   removeSessionFromUser(mqttPayload)
   {
-    const fromUserId = mqttPayload.fromUserId;
-    this.store.removeSession(fromUserId);
-    this.store.removeSessionCipher(fromUserId);
+    const from = mqttPayload.from;
+    this.store.removeSession(from);
+    this.store.removeSessionCipher(from);
     if(mqttPayload.logout){
-      this.store.removeIdentity(fromUserId);
+      this.store.removeIdentity(from);
     }
   }
   /**

@@ -41,7 +41,7 @@ export class SidebarContentComponent implements OnInit, OnDestroy, AfterViewInit
 
   subscribeToAddUnreadClass() {
     this.subs.push(this.roomService.addUnreadClass.subscribe(roomId => {
-      if (this.roomData.id === roomId && this.roomService.getActiveRoomId() !== roomId) {
+      if (this.roomData.id === roomId && Utility.getCurrentActiveRoomId() !== roomId) {
         this.unreadClassActive = true;
       }
     }))
@@ -69,8 +69,6 @@ export class SidebarContentComponent implements OnInit, OnDestroy, AfterViewInit
       this.pouchDbService.saveRoomDataToChatRoomDb(this.roomData);
       this.unreadClassActive = false;
     }
-    this.roomService.setActiveRoomData(this.roomData);
-    this.roomService.roomeName.next(this.roomData.name);
   }
   
   ngOnDestroy(): void {

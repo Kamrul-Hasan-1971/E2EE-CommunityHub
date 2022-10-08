@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
+import { Utility } from 'src/app/utility/utility';
 import { RoomData } from '../../interfaces/roomData';
+import { PouchDbService } from '../clientDB/pouch-db.service';
+import { DataStateService } from '../data-state.service';
+import { UserService } from '../users/user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -8,32 +12,47 @@ import { RoomData } from '../../interfaces/roomData';
 export class RoomService {
   upStream = new Subject<string>();
   downStream = new Subject<string>();
-  roomeName = new Subject<string>();
+  roomeChange = new Subject<string>();
   inputBoxVisibilitySub = new Subject<boolean>();
   sendMessage = new Subject<any>();
   activeRoomIdSubject = new Subject<string>();
   addUnreadClass = new Subject<string>();
   activatedRoomData: RoomData;
   activeRoomId : string = "";
-  constructor() { }
+  constructor(
+    private dataStateService:DataStateService,
+    private pouchDbService : PouchDbService,
+    private userService : UserService
+  ) { }
 
-  setActiveRoomId(roomId) {
-    this.activeRoomId = roomId;
-  }
-  getActiveRoomId() {
-    if (this.activeRoomId) {
-      return this.activeRoomId;
+  async getRoomDataByRoomID(roomId)
+  {
+    //1st try data state
+    if(roomId == Utility.getCommunitityId()) return this.dataStateService.communityRoom;
+    let room = this.dataStateService.getRoomState(roomId);
+    if(room) {
+      console.log("Get roomdata from state roomId",roomId,"room",room)
+      return room;
     }
-    return "";
-  }
 
-  setActiveRoomData(roomData) {
-    this.activatedRoomData = roomData;
-  }
-  getActiveRoomData() {
-    if (this.activatedRoomData) {
-      return this.activatedRoomData;
+    //2nd try from clienDb
+    room = await this.pouchDbService.getChatRoomByRoomId(roomId);
+    this.dataStateService.setRoomState(roomId,room);
+    room = this.dataStateService.getRoomState(roomId);
+    if(room) {
+      console.log("Get roomdata from clientDb roomId",roomId,"room",room)
+      return room;
     }
+
+    //3rd try from server
+    room = await this.userService.getUserById(roomId) as RoomData;
+    if(room) {
+      console.log("Get roomdata from server roomId",roomId,"room",room)
+      return room;
+    }
+
+    console.log("No roomdata for this roomId",roomId);
     return null;
   }
+ 
 }

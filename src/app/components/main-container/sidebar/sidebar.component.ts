@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Subject, Subscription, takeUntil } from 'rxjs';
 import { RoomData } from '../../../interfaces/roomData';
@@ -31,7 +31,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   currentUser: any;
   communityRoom: RoomData;
   destroyNewUserInCommunity = new Subject<any>();
-
+  activeStatusTimer: any;
 
   constructor(
     private commonService: CommonService,
@@ -46,7 +46,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private loaderService: LoaderService,
     private signalManagerService: SignalManagerService,
     private signalServerStoreService: SignalServerStoreService,
-    private eventService: EventService
+    private eventService: EventService,
+    //private cdRef: ChangeDetectorRef,
   ) {
   }
 
@@ -61,26 +62,28 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.subscribeSearchBoxForm();
     this.subscribechangesRoomListForLastMessage();
     this.subscribeToNewUserInCommunityPayload();
+    this.mqttConnectorService.publishActiveStatus();
+    this.activeStatusTimer = setInterval(() => {
+      this.mqttConnectorService.publishActiveStatus();
+    }, 60000);
   }
 
   subscribechangesRoomListForLastMessage() {
-    this.subs.push(this.commonService.roomListChangesForLastMessage$.subscribe((lastMessageObj) => {
+    this.subs.push(this.commonService.roomListChangesForLastMessage$.subscribe(async(lastMessageObj) => {
       let messageRoomId = lastMessageObj.from;
       if (lastMessageObj.from == Utility.getCurrentUserId() || lastMessageObj.to == this.communityRoom.id) {
         messageRoomId = lastMessageObj.to;
       }
-      this.setRoomLastMessageObject(messageRoomId, lastMessageObj.message);
-      this.setRoomOrderId(messageRoomId, lastMessageObj.orderId);
-      if (messageRoomId != this.communityRoom.id) this.roomData.sort(this.compare);
+      let chatRoom = await this.roomService.getRoomDataByRoomID(messageRoomId);
+      chatRoom.lastMessage = Utility.sliceString(lastMessageObj.message);
+      chatRoom.roomOrderId = lastMessageObj.orderId;
+      chatRoom.hasUnreadMessage = (Utility.getCurrentActiveRoomId() != messageRoomId);
       this.roomService.addUnreadClass.next(messageRoomId);
-      let chatRoom = this.dataStateService.getRoomState(messageRoomId);
-      let activeRoom = this.roomService.getActiveRoomData();
-      if (activeRoom) {
-        chatRoom.hasUnreadMessage = (activeRoom.id != messageRoomId);
+
+      if (messageRoomId != this.communityRoom.id) {
+        this.roomData.sort(this.compare);
       }
-      else {
-        chatRoom.hasUnreadMessage = true;
-      }
+
       let changes = {
         _id: messageRoomId,
         lastMessage: Utility.sliceString(lastMessageObj.message),
@@ -91,19 +94,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }))
   }
 
-  setRoomLastMessageObject(roomId: string, lastMessage: string) {
-    let roomState = this.dataStateService.getRoomState(roomId);
-    if (roomState) {
-      roomState.lastMessage = Utility.sliceString(lastMessage);
-    }
-  }
+  // setRoomLastMessageObject(roomId: string, lastMessage: string) {
+  //   let roomState = this.dataStateService.getRoomState(roomId);
+  //   if (roomState) {
+  //     roomState.lastMessage = Utility.sliceString(lastMessage);
+  //   }
+  // }
 
-  setRoomOrderId(roomId, roomOrderId) {
-    let roomState = this.dataStateService.getRoomState(roomId);
-    if (roomState) {
-      roomState.roomOrderId = roomOrderId;
-    }
-  }
+  // setRoomOrderId(roomId, roomOrderId) {
+  //   let roomState = this.dataStateService.getRoomState(roomId);
+  //   if (roomState) {
+  //     roomState.roomOrderId = roomOrderId;
+  //   }
+  // }
 
   initSearchForm() {
     this.searchForm = this.formBuilder.group({
@@ -173,18 +176,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const roomDataFromChatRoomDB: any[] = await this.pouchDbService.getAllChatRoom();
     console.log("roomDataFromChatRoomDB", roomDataFromChatRoomDB);
 
-    roomDataFromChatRoomDB.forEach(roomFromDb => {
-      this.setRoomOrderId(roomFromDb.doc.id, roomFromDb.doc.roomOrderId);
-      this.setRoomLastMessageObject(roomFromDb.doc.id, roomFromDb.doc.lastMessage || "");
-      let roomState = this.dataStateService.getRoomState(roomFromDb.doc.id);
+    roomDataFromChatRoomDB.forEach(async(roomFromDb) => {
+      let roomState = await this.roomService.getRoomDataByRoomID(roomFromDb.doc.id);
       if (roomState) {
         roomState.hasUnreadMessage = roomFromDb.doc.hasUnreadMessage;
+        roomState.lastSeen = roomFromDb.doc.lastSeen;
+        roomState.lastMessage = Utility.sliceString(roomFromDb.doc.lastMessage || "");
+        roomState.roomOrderId = roomFromDb.doc.roomOrderId;
       }
     });
     this.roomData.sort(this.compare);
     Utility.setRoomCount(this.roomData.length + 1);
     this.pouchDbService.saveRoomsDataToChatRoomDb(this.roomData);
-    this.pouchDbService.saveRoomsDataToChatRoomDb([this.communityRoom]);
+    this.pouchDbService.saveRoomDataToChatRoomDb(this.communityRoom);
     //this.roomData = this.roomData.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1);
     this.searchfilteredRoomData = this.roomData;
     this.loaderService.setLoading(false);
@@ -209,11 +213,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.mqttConnectorService.publishRemoveSignalProtocolSession(true);
     await this.pouchDbService.deleteAllPouchDB();
     await this.authService.SignOut();
+    this.mqttConnectorService.publishActiveStatus(false);
     await this.signalServerStoreService.deletePreKeyBundle(Utility.getCurrentUserId());
     this.loaderService.setLoading(false);
   }
 
   ngOnDestroy(): void {
+    if (this.activeStatusTimer) clearInterval(this.activeStatusTimer);
     console.log("3");
     this.subs.map(s => s.unsubscribe());
   }

@@ -135,4 +135,53 @@ export class Utility {
   static getCommonTopicId() {
     return "051c1e3e-b8e4-4e65-95cd-f763d2e91ba6";
   }
+
+  static getProcessedDate(time: any) {
+    let fulldays = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
+    let months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    var dt = (dt = new Date(time)),
+      date = dt.getDate(),
+      month = months[dt.getMonth()],
+      timeDiff = time - Date.now(),
+      diffDays = new Date().getDate() - date,
+      diffMonth = new Date().getMonth() - dt.getMonth(),
+      diffYears = new Date().getFullYear() - dt.getFullYear();
+    if (diffYears === 0 && diffMonth === 0 && diffDays === 0) {
+      return { day: 'Today', time: time };
+    } else if (diffYears === 0 && diffMonth === 0 && diffDays === 1) {
+      return { day: 'Yesterday', time: time };
+    } else if (
+      diffYears === 0 &&
+      diffMonth === 0 &&
+      diffDays < 7 &&
+      diffDays >= 0
+    ) {
+      let dayName = fulldays[dt.getDay()];
+      return { day: dayName, time: time };
+    } else {
+      return { day: `${month} ${date}`, time: time };
+    }
+  }
 }

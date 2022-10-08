@@ -4,5 +4,7 @@ export interface RoomData {
     photoURL: string;
     roomOrderId: any;
     lastMessage:string;
-    hasUnreadMessage: boolean
+    hasUnreadMessage: boolean;
+    lastSeen?:any;
+    lastUpdated?:any
 }

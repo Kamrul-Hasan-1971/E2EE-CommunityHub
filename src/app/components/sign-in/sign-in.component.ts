@@ -88,7 +88,7 @@ export class SignInComponent implements OnInit {
       let newUserCreatePublishTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.userCreate,Utility.getCommonTopicId());
       console.log("Publishing new user create in toopic",newUserCreatePublishTopic,"currentUser payload",currentUser)
       this.mqttConnectorService.publishToNonPersistentClient(newUserCreatePublishTopic,currentUser);
-      debugger
+
       Utility.setCurrentUser(currentUser);
       await this.userService.updateUser(currentUser);
     }

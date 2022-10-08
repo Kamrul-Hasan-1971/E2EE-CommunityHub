@@ -11,6 +11,8 @@ import { MqttNonPerTopic } from 'src/app/models/mqtt-non-persistent-topic-enum';
 import { MqttConnectorService } from 'src/app/services/mqtt/mqtt-connector.service';
 import { EventService } from 'src/app/services/event.service';
 import { DataStateService } from 'src/app/services/data-state.service';
+import { RoomData } from 'src/app/interfaces/roomData';
+import { PouchDbService } from 'src/app/services/clientDB/pouch-db.service';
 
 
 @Component({
@@ -21,7 +23,6 @@ import { DataStateService } from 'src/app/services/data-state.service';
 export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   subs: Subscription;
   paramValue: string;
-  roomName: string = "";
   inputBoxVisibility: boolean = false;
   sendMessageForm: FormGroup;
   destroyAllGlobalSubscriptionSubject = new Subject<any>();
@@ -32,15 +33,14 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   typing = new BehaviorSubject<boolean>(false);
   typing$ = this.typing.asObservable();
   isGroupRoom: boolean = false;
+  room: RoomData;
 
-
-  // lastActiveTime = "";
-  // destroyMainStatus = new Subject<any>();
-  // mainStatusPayload:any;
-  // statusTTL = 35000;
-  // isOnline: boolean = false;
-  // lastSeen: any;
-
+  lastActiveTime = "";
+  destroyMainStatus = new Subject<any>();
+  //mainStatusPayload: any;
+  statusTTL = 60000;
+  isOnline: boolean = false;
+  lastSeen: any;
 
 
   constructor(
@@ -51,7 +51,52 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     //private payloadProcessorService: PayloadProcessorService,
     private eventService: EventService,
     private dataStateService: DataStateService,
+    private pouchDbService: PouchDbService
   ) {
+  }
+
+  activeStatusSubscription() {
+    this.destroyMainStatus = new Subject<any>();
+    this.eventService.activeStatusPayload$
+      .pipe(takeUntil(this.destroyMainStatus))
+      .subscribe((statusPayload: any) => {
+        if (statusPayload) {
+          console.log('user-online-status-payload', statusPayload);
+          this.setRoomActiveStatusToRoomData(statusPayload.from, statusPayload.status.lastSeen);
+          if (statusPayload.from == Utility.getCurrentActiveRoomId()) {
+            this.handleUserOnlineStatus(statusPayload.status.lastSeen, statusPayload.status.isOnline);
+          }
+          // this.mainStatusPayload = statusPayload;
+          //console.log('ChatThread: ----last-seen-time----', this.lastSeen);
+          // console.log('ChatThread: cd calling detectchanges from lastseen status update!');
+        }
+      });
+  }
+
+  async setRoomActiveStatusToRoomData(roomId: string, lastSeen) {
+    let room = await this.roomService.getRoomDataByRoomID(roomId);
+    if (room) {
+      room.lastSeen = lastSeen;
+      // this.cdRef.detectChanges();
+      this.pouchDbService.saveRoomDataToChatRoomDb(room);
+    }
+  }
+
+  handleUserOnlineStatus(lastSeen, isOnline) {
+    if (this.isActive(lastSeen) && isOnline) {
+      this.isOnline = true;
+    } else {
+      this.isOnline = false;
+    }
+    this.lastSeen = Utility.getProcessedDate(lastSeen);
+    debugger
+  }
+
+  isActive(lastSeen: number) {
+    const now = new Date().getTime();
+    const difference = now - lastSeen;
+    console.log('Onlinestatus now', now, "lastseen", lastSeen, "difference", difference);
+    return difference <= this.statusTTL;
   }
 
   ngAfterViewInit() {
@@ -59,12 +104,12 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.roomNameSubscription();
+    this.roomChangeSubscription();
     this.inputBoxVisibilitySubscription();
     this.initSenMessageForm();
     this.onTypingMessageAction();
-    //this.activeStatusSubscription();
     this.subscribeToTypingPayload();
+    this.activeStatusSubscription();
   }
 
   subscribeToTypingPayload() {
@@ -93,119 +138,31 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     }, 2500);
   }
 
-  // activeStatusSubscription()
-  // {
-  //     this.destroyMainStatus = new Subject<any>();
-  //     this.payloadProcessorService.activeStatusPayload$
-  //       .pipe(takeUntil(this.destroyMainStatus))
-  //       .subscribe((statusPayload: any) => {
-  //         statusPayload = {
-  //           fromUser: Utility.getCurrentActiveRoomId(),
-  //           status: {
-  //             isOnline: true,
-  //             lastSeen: Date.now(),
-  //           },
-  //         };
-  //         const payload = { ...statusPayload };
-  //         console.log('user-online-status-payload',payload);
-  //         if (payload  && payload.fromUser === Utility.getCurrentActiveRoomId()) {
-  //           console.log('!!!main-status-payload inside if',payload);
-  //           this.mainStatusPayload = payload;
-  //           this.handleUserOnlineStatus(payload);
-  //           console.log('ChatThread: ----last-seen-time----',this.lastSeen);
-  //           console.log('ChatThread: cd calling detectchanges from lastseen status update!');
-  //         }
-  //       });
-  // }
-
-  // handleUserOnlineStatus(onlineStatusPayload: any) {
-  //   if (
-  //     onlineStatusPayload &&
-  //     onlineStatusPayload.status &&
-  //     onlineStatusPayload.status.isOnline &&
-  //     this.mainStatusValidator(onlineStatusPayload.status.lastSeen)
-  //   ) {
-  //     this.isOnline = true;
-  //   } else {
-  //     this.isOnline = false;
-  //   }
-  //   if (onlineStatusPayload && onlineStatusPayload.status) {
-  //     this.lastSeen = {
-  //       ...this.getProcessedDate(onlineStatusPayload.status.lastSeen),
-  //     };
-  //   } else {
-  //     this.lastSeen = undefined;
-  //   }
-  // }
-
-  // mainStatusValidator(lastSeen: number) {
-  //   const now = new Date().getTime();
-  //   console.log('ChatThread: #&&#-now', now);
-  //   console.log('ChatThread: #&&#-lastSeen', lastSeen);
-  //   const difference = now - lastSeen;
-  //   console.log('ChatThread: #&&#-difference', difference);
-  //   return difference <= this.statusTTL;
-  // }
-
-  // getProcessedDate(time: any) {
-  //   let fulldays = [
-  //     'Sunday',
-  //     'Monday',
-  //     'Tuesday',
-  //     'Wednesday',
-  //     'Thursday',
-  //     'Friday',
-  //     'Saturday',
-  //   ];
-  //   let months = [
-  //     'Jan',
-  //     'Feb',
-  //     'Mar',
-  //     'Apr',
-  //     'May',
-  //     'Jun',
-  //     'Jul',
-  //     'Aug',
-  //     'Sep',
-  //     'Oct',
-  //     'Nov',
-  //     'Dec',
-  //   ];
-
-  //   var dt = (dt = new Date(time)),
-  //     date = dt.getDate(),
-  //     month = months[dt.getMonth()],
-  //     timeDiff = time - Date.now(),
-  //     diffDays = new Date().getDate() - date,
-  //     diffMonth = new Date().getMonth() - dt.getMonth(),
-  //     diffYears = new Date().getFullYear() - dt.getFullYear();
-  //   if (diffYears === 0 && diffMonth === 0 && diffDays === 0) {
-  //     return { day: 'Today', time: time };
-  //   } else if (diffYears === 0 && diffMonth === 0 && diffDays === 1) {
-  //     return { day: 'Yesterday', time: time };
-  //   } else if (
-  //     diffYears === 0 &&
-  //     diffMonth === 0 &&
-  //     diffDays < 7 &&
-  //     diffDays >= 0
-  //   ) {
-  //     let dayName = fulldays[dt.getDay()];
-  //     return { day: dayName, time: time };
-  //   } else {
-  //     return { day: `${month} ${date}`, time: time };
-  //   }
-  // }
-
   inputBoxVisibilitySubscription() {
     this.roomService.inputBoxVisibilitySub.subscribe((inputBoxVisibility: boolean) => {
       this.inputBoxVisibility = inputBoxVisibility;
     })
   }
 
-  roomNameSubscription() {
-    this.roomService.roomeName.subscribe((roomName) => {
-      this.roomName = roomName;
+  roomChangeSubscription() {
+    this.roomService.roomeChange.subscribe(async (roomId) => {
       this.sendMessageForm.reset();
+      this.isGroupRoom = Utility.getCurrentActiveRoomId() == Utility.getCommunitityId();
+      debugger
+      this.room = await this.roomService.getRoomDataByRoomID(roomId);
+
+      if (this.room.lastSeen) {
+        this.handleUserOnlineStatus(this.room.lastSeen, false);
+      }
+      else if(this.room.lastUpdated)
+      {
+        this.handleUserOnlineStatus(this.room.lastUpdated, false);
+      }
+      else{
+        this.lastSeen = null;
+        this.isOnline = false;
+        //this.cdRef.detectChanges();
+      }
     })
   }
 
@@ -221,7 +178,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
         takeUntil(this.destroyAllGlobalSubscriptionSubject),
         debounceTime(300),
         tap(() => {
-          debugger
           console.log('ChatThread: messageControl.valueChanges');
           const now = new Date().getTime();
           if (now - this.lastTypingStatusSendTime > 5000) {

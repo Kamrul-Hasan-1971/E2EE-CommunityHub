@@ -233,50 +233,26 @@ export class MqttConnectorService {
   }
 
   publishActiveStatus(status = true) {
-    const currentUserId = Utility.getCurrentUserId();
-    const currentClusterId = Utility.getClusterId();
-    if (currentUserId && currentClusterId) {
-      const statusPayload = {
-        fromUser: currentUserId,
-        status: {
-          isOnline: status,
-          lastSeen: Date.now(),
-        },
-      };
-      console.log(
-        'MqttConnectorService: publishing user status',
-        statusPayload,
-        'in',
-        `chatRoom/${currentClusterId}/${currentUserId}/status`
-      );
-      this.publishToNonPersistentClient(
-        `chatRoom/${currentClusterId}/${currentUserId}/status`,
-        statusPayload,
-        true
-      );
-    }
+    const statusPayload = {
+      from: Utility.getCurrentUserId(),
+      status: {
+        isOnline: status,
+        lastSeen: Date.now(),
+      },
+    };
+    const activeStatusTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.activeStatus, Utility.getCommonTopicId());
+    console.log('publishing user status', statusPayload, 'in', activeStatusTopic);
+    this.publishToNonPersistentClient(activeStatusTopic, statusPayload, true);
   }
 
   publishRemoveSignalProtocolSession(logout = false) {
-    const currentUserId = Utility.getCurrentUserId();
-    const currentClusterId = Utility.getClusterId();
-    if (currentUserId && currentClusterId) {
       let signalProtocolPayload = {
-        fromUserId: Utility.getCurrentUserId(),
+        from: Utility.getCurrentUserId(),
         logout: logout
       }
-      console.log(
-        'MqttConnectorService: publishing remove signal session',
-        signalProtocolPayload,
-        'in',
-        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession, Utility.getCommonTopicId())
-      );
-      this.publishToNonPersistentClient(
-        MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession, Utility.getCommonTopicId()),
-        signalProtocolPayload,
-        false
-      );
-    }
+      const removeSignalProtocolSessionTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession, Utility.getCommonTopicId());
+      console.log('MqttConnectorService: publishing remove signal session',signalProtocolPayload,'in',removeSignalProtocolSessionTopic);
+      this.publishToNonPersistentClient(removeSignalProtocolSessionTopic,signalProtocolPayload,false);
   }
 
   async publishToPersistentClient(topic: string, payload: any) {
