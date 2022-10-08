@@ -172,7 +172,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   publishReadStatus() {
     this.activeRoomMessages.forEach(message => {
       if (this.shouldPublishReadStatus(message)) {
-        console.log("#hasan", message)
+       // console.log("#hasan", message)
         const statusPayload = {
           messageId: message.messageId,
           messageStatus: MessageStatus.read,

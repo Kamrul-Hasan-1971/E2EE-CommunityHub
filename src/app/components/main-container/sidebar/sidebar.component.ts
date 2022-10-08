@@ -180,7 +180,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       let roomState = await this.roomService.getRoomDataByRoomID(roomFromDb.doc.id);
       if (roomState) {
         roomState.hasUnreadMessage = roomFromDb.doc.hasUnreadMessage;
-        roomState.lastSeen = roomFromDb.doc.lastSeen;
+        delete roomState['lastSeen']
+        //roomState.lastSeen = roomFromDb.doc.lastSeen;
         roomState.lastMessage = Utility.sliceString(roomFromDb.doc.lastMessage || "");
         roomState.roomOrderId = roomFromDb.doc.roomOrderId;
       }

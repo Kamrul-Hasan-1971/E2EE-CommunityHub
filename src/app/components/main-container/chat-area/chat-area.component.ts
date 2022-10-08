@@ -60,6 +60,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.eventService.activeStatusPayload$
       .pipe(takeUntil(this.destroyMainStatus))
       .subscribe((statusPayload: any) => {
+        debugger
         if (statusPayload) {
           console.log('user-online-status-payload', statusPayload);
           this.setRoomActiveStatusToRoomData(statusPayload.from, statusPayload.status.lastSeen);
@@ -78,7 +79,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     if (room) {
       room.lastSeen = lastSeen;
       // this.cdRef.detectChanges();
-      this.pouchDbService.saveRoomDataToChatRoomDb(room);
+      //this.pouchDbService.saveRoomDataToChatRoomDb(room);
     }
   }
 
@@ -89,7 +90,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
       this.isOnline = false;
     }
     this.lastSeen = Utility.getProcessedDate(lastSeen);
-    debugger
   }
 
   isActive(lastSeen: number) {
@@ -147,8 +147,10 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   roomChangeSubscription() {
     this.roomService.roomeChange.subscribe(async (roomId) => {
 
+     // this.lastSeen = null;
       if(this.room && this.room.id != Utility.getCommunitityId())
       {
+        //delete this.room['lastSeen'];
         const previousRoomTopic = MqttUtility.parseMqttTopic(MqttNonPerTopic.activeStatus,this.room.id);
         this.mqttConnectorService.unsubscribeSigleNonPersistentTopic(previousRoomTopic);
       }
@@ -160,21 +162,21 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
       this.sendMessageForm.reset();
       this.isGroupRoom = Utility.getCurrentActiveRoomId() == Utility.getCommunitityId();
-      debugger
       this.room = await this.roomService.getRoomDataByRoomID(roomId);
 
-      if (this.room.lastSeen) {
-        this.handleUserOnlineStatus(this.room.lastSeen, false);
-      }
-      else if(this.room.lastUpdated)
-      {
-        this.handleUserOnlineStatus(this.room.lastUpdated, false);
-      }
-      else{
+      // if (this.room.lastSeen) {
+      //   this.handleUserOnlineStatus(this.room.lastSeen, false);
+      // }
+      // else 
+      // if(this.room.lastUpdated)
+      // {
+      //  // this.handleUserOnlineStatus(this.room.lastUpdated, false);
+      // }
+      // else{
         this.lastSeen = null;
         this.isOnline = false;
         //this.cdRef.detectChanges();
-      }
+      //}
     })
   }
 

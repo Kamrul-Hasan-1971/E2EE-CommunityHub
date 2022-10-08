@@ -182,7 +182,7 @@ export class MqttConnectorService {
         topics,
         this.nonPersistentQos,
         (err, granted) => {
-          console.log("NonPersistent granted", granted);
+          console.log("Hasan NonPersistent granted", granted);
           if (err) {
             console.error(
               'MqttConnectorService: error during topic subscription for',
@@ -212,11 +212,11 @@ export class MqttConnectorService {
   {
     if (this.nonPersistentClient) {
       this.nonPersistentClient.unsubscribe(
-        MqttUtility.parseMqttTopic(topic, Utility.getCurrentUserId()),
+        topic,
         this.nonPersistentQos
       );
       console.log(
-        `MqttConnectorService: unsubscribed to non-persistent topic : ${topic}`
+        `Hasan: unsubscribed to non-persistent topic : ${topic}`
       );
     }
   }
