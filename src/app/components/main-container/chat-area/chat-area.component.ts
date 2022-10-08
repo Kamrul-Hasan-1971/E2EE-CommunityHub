@@ -60,7 +60,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.eventService.activeStatusPayload$
       .pipe(takeUntil(this.destroyMainStatus))
       .subscribe((statusPayload: any) => {
-        debugger
         if (statusPayload) {
           console.log('user-online-status-payload', statusPayload);
           this.setRoomActiveStatusToRoomData(statusPayload.from, statusPayload.status.lastSeen);

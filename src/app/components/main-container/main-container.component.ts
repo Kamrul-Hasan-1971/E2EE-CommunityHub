@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Utility } from 'src/app/utility/utility';
 import { MqttConnectorService } from '../../services/mqtt/mqtt-connector.service';
 import { UserService } from '../../services/users/user.service';
 @Component({
@@ -16,7 +17,7 @@ export class MainContainerComponent implements OnInit,OnDestroy {
   }
 
   ngOnInit(): void {
-
+    Utility.setCurrentActiveRoomId("");
     //const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     //console.log(loggedInUser);
     //localStorage.setItem('user', JSON.stringify(loggedInUser));

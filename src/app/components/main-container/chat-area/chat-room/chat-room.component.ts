@@ -130,10 +130,12 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   routerSubscription() {
     this.routeSub = this.route.params.subscribe(async (params) => {
       this.roomId = params['id'];
+      debugger
       if (this.roomId) {
         Utility.setCurrentActiveRoomId(this.roomId);
         this.room = await this.roomService.getRoomDataByRoomID(this.roomId);
         this.roomService.roomeChange.next(this.roomId);
+        this.roomService.activeRoomIdSubject.next(this.roomId);
 
         // if (this.roomId == Utility.getCommunitityId()) {
         //   this.isGroupRoom = true;
@@ -152,7 +154,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
           this.publishReadStatus();
         }
         // this.roomService.setActiveRoomId(this.roomId);
-        this.roomService.activeRoomIdSubject.next(this.roomId);
 
         // if (this.roomId == Utility.getCommunitityId()) {
         //   this.roomService.setActiveRoomData(this.dataStateService.communityRoom);
@@ -164,6 +165,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         // }
       }
       else {
+        this.roomService.activeRoomIdSubject.next("");
+        Utility.setCurrentActiveRoomId("");
         this.roomService.inputBoxVisibilitySub.next(false);
       }
     });
@@ -172,7 +175,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   publishReadStatus() {
     this.activeRoomMessages.forEach(message => {
       if (this.shouldPublishReadStatus(message)) {
-       // console.log("#hasan", message)
+        // console.log("#hasan", message)
         const statusPayload = {
           messageId: message.messageId,
           messageStatus: MessageStatus.read,
