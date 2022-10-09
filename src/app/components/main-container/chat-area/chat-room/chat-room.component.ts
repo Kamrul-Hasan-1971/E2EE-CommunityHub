@@ -42,6 +42,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   msgStatusChangesSub: Subscription;
   messageStatusEnum = MessageStatus;
   activeRoomMessages: any[] = [];
+  isGroupRoom: boolean = false;
   // destroyTyping = new Subject<any>();
   // typingName = '';
   // typingTimer: any;
@@ -131,6 +132,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.routeSub = this.route.params.subscribe(async (params) => {
       this.roomId = params['id'];
       if (this.roomId) {
+        this.isGroupRoom = (Utility.getCurrentActiveRoomId() == Utility.getCommunitityId());
         Utility.setCurrentActiveRoomId(this.roomId);
         this.room = await this.roomService.getRoomDataByRoomID(this.roomId);
         this.roomService.roomeChange.next(this.roomId);
