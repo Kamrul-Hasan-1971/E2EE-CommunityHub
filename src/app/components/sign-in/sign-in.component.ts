@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MqttNonPerCommonTopic } from 'src/app/models/mqtt-non-persistent-topic-enum';
 import { PouchDbService } from 'src/app/services/clientDB/pouch-db.service';
 import { MqttConnectorService } from 'src/app/services/mqtt/mqtt-connector.service';
+import { PayloadProcessorService } from 'src/app/services/payloadProcessor/payload-processor.service';
 import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
 import { MqttUtility } from 'src/app/utility/mqtt-utility/mqtt-utility';
 import { Utility } from 'src/app/utility/utility';
@@ -36,7 +37,8 @@ export class SignInComponent implements OnInit {
     private userService: UserService,
     private signalManagerService: SignalManagerService,
     private mqttConnectorService: MqttConnectorService,
-    private pouchDbService: PouchDbService
+    private pouchDbService: PouchDbService,
+    private payloadProcessorService: PayloadProcessorService
   ) { }
 
   ngOnInit() {
@@ -69,33 +71,38 @@ export class SignInComponent implements OnInit {
 
   async initiateAfterSignIn() {
     let currentAuthUser = await this.authService.getCurrentAuthUser()
-      .catch(error => {
-        window.alert(error);
-        console.error(error);
-        this.loading = false;
-        return
-      });
-
+    .catch(error => {
+      window.alert(error);
+      console.error(error);
+      this.loading = false;
+      return
+    });
+    
     let currentUser: any = await this.userService.getCurrentUser(currentAuthUser.uid)
-      .catch(error => {
-        this.loading = false;
-        window.alert(error);
-        console.error(error);
-        this.loading = false;
+    .catch(error => {
+      this.loading = false;
+      window.alert(error);
+      console.error(error);
+      this.loading = false;
       });
     if (currentAuthUser.emailVerified && !currentUser.emailVerified) {
       currentUser.emailVerified = true;
       let newUserCreatePublishTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.userCreate,Utility.getCommonTopicId());
       console.log("Publishing new user create in toopic",newUserCreatePublishTopic,"currentUser payload",currentUser)
       this.mqttConnectorService.publishToNonPersistentClient(newUserCreatePublishTopic,currentUser);
-
+      
       Utility.setCurrentUser(currentUser);
       await this.userService.updateUser(currentUser);
+      // await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
     }
     await this.pouchDbService.init();
+    this.signalManagerService.init();
     await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
+    this.payloadProcessorService.payloadProcessorServiceInit();
+    this.mqttConnectorService.mqttConnectorServiceInit();
     this.loading = false;
     this.loginForm.reset();
+    this.userService.redirectFromLoggedIn = true;
     this.router.navigate(['']);
   }
 

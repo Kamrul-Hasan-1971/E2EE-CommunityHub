@@ -12,7 +12,8 @@ import {
 }
   from '@privacyresearch/libsignal-protocol-typescript'
 import { PouchDbService } from '../clientDB/pouch-db.service';
-import { Utility } from 'src/app/utility/utility';
+//import { Utility } from 'src/app/utility/utility';
+import { EventService } from '../event.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,9 +23,31 @@ export class SignalManagerService {
   private store: SignalProtocolStore;
   constructor(
     private signalServerStoreService: SignalServerStoreService,
-    private pouchDbService: PouchDbService
+    private pouchDbService: PouchDbService,
+    private eventService : EventService
   ) {
-    this.store = new SignalProtocolStore(this.pouchDbService);
+   // this.store = new SignalProtocolStore(this.pouchDbService);
+    this.store = new SignalProtocolStore(this.eventService);
+  }
+
+  init()
+  {
+    this.subscribeUpdateSignalClienDbData();
+  }
+
+  subscribeUpdateSignalClienDbData()
+  {
+    this.eventService.updateSignalClienDbData$.subscribe((data)=>{
+      console.log("#hasan Update signal data subject data",data);
+      if(data.op == "put")
+      {
+        this.pouchDbService.saveSignalStoreData(data.key, data.value);
+      }
+      else if(data.op == "remove")
+      {
+        this.pouchDbService.removeSignalStoreData(data.key);
+      }
+    })
   }
 
   removeSessionFromUser(mqttPayload)
@@ -40,16 +63,19 @@ export class SignalManagerService {
      * Initialize the manager when the user logs on.
      */
   async initializeAsync(userId) {
+    console.log("#hasan Signal initialization start userId", userId)
     this.userId = userId;
     await this._generateIdentityAsync();
     var preKeyBundle = await this._generatePreKeyBundleAsync();
     this.signalServerStoreService.registerNewPreKeyBundle(this.userId, preKeyBundle);
+    console.log("#hasan Signal initialization Finish userId", userId,"preKeyBundle: ",preKeyBundle)
+
   }
 
   initaitePreviouslyCreatedSignalData(storedataFromDB)
   {
     Object.keys(storedataFromDB).forEach((key)=> {
-        this.store.put(key, storedataFromDB[key]);
+        this.store.put(key, storedataFromDB[key], false);
     });
   }
 
@@ -83,23 +109,30 @@ export class SignalManagerService {
     // PLEASE NOTE: I am creating set of 4 pre-keys for demo purpose only.
     // The libsignal-javascript does not provide a counter to generate multiple keys, contrary to the case of JAVA (KeyHelper.java)
     // Therefore you need to set it manually (as per my research)
-    var keys = await Promise.all([
-      KeyHelper.generatePreKey(registrationId + 1),
-      KeyHelper.generatePreKey(registrationId + 2),
-      KeyHelper.generatePreKey(registrationId + 3),
-      KeyHelper.generatePreKey(registrationId + 4),
-      KeyHelper.generatePreKey(registrationId + 5),
-      KeyHelper.generatePreKey(registrationId + 6),
-      KeyHelper.generatePreKey(registrationId + 7),
-      KeyHelper.generatePreKey(registrationId + 8),
-      KeyHelper.generatePreKey(registrationId + 9),
-      KeyHelper.generatePreKey(registrationId + 10),
-      KeyHelper.generatePreKey(registrationId + 11),
-      KeyHelper.generateSignedPreKey(identity, registrationId + 1)
-    ]);
+    const promises = [];
+    for(var i = 1 ; i<= 100; i++)
+    {
+      promises.push(KeyHelper.generatePreKey(registrationId + i));
+    }
+    promises.push(KeyHelper.generateSignedPreKey(identity, registrationId + 1));
+    // var keys = await Promise.all([
+    //   KeyHelper.generatePreKey(registrationId + 1),
+    //   KeyHelper.generatePreKey(registrationId + 2),
+    //   KeyHelper.generatePreKey(registrationId + 3),
+    //   KeyHelper.generatePreKey(registrationId + 4),
+    //   KeyHelper.generatePreKey(registrationId + 5),
+    //   KeyHelper.generatePreKey(registrationId + 6),
+    //   KeyHelper.generatePreKey(registrationId + 7),
+    //   KeyHelper.generatePreKey(registrationId + 8),
+    //   KeyHelper.generatePreKey(registrationId + 9),
+    //   KeyHelper.generatePreKey(registrationId + 10),
+    //   KeyHelper.generatePreKey(registrationId + 11),
+    //   KeyHelper.generateSignedPreKey(identity, registrationId + 1)
+    // ]);
+    var keys = await Promise.all(promises);
 
-    let preKeys = [keys[0], keys[1], keys[2], keys[3],keys[4], keys[5], keys[6], keys[7],keys[8], keys[9], keys[10]]
-    let signedPreKey = keys[11];
+    let signedPreKey = keys.pop();
+    let preKeys = keys
 
     preKeys.forEach(preKey => {
       this.store.storePreKey(preKey.keyId, preKey.keyPair);
@@ -131,22 +164,30 @@ export class SignalManagerService {
      * @param message The message to send.
      */
   async encryptMessageAsync(remoteUserId, message) {
-    return message;
+    //return message;
     var sessionCipher: SessionCipher = this.store.loadSessionCipher(remoteUserId);
 
     if (sessionCipher == null) {
+      console.log("#hasan sessionCipher not exists during encryption");
       var address = new SignalProtocolAddress(remoteUserId, 123);
       // Instantiate a SessionBuilder for a remote recipientId + deviceId tuple.
       var sessionBuilder = new SessionBuilder(this.store, address);
 
       var remoteUserPreKey = await this.signalServerStoreService.getPreKeyBundle(remoteUserId);
+      console.log("#hasan remoteUserPreKey from remoteUserId",remoteUserPreKey);
       // Process a prekey fetched from the server. Returns a promise that resolves
       // once a session is created and saved in the store, or rejects if the
       // identityKey differs from a previously seen identity for this address.
       const session = await sessionBuilder.processPreKey(remoteUserPreKey);
+      console.log("#hasan build session",session);
+
 
       sessionCipher = new SessionCipher(this.store, address);
+      console.log("#hasan build session cipher",sessionCipher);
       this.store.storeSessionCipher(remoteUserId, sessionCipher);
+    }
+    else{
+      console.log("#hasan sessionCipher exists during encryption");
     }
 
     let cipherText = await sessionCipher.encrypt(new TextEncoder().encode(message).buffer);
@@ -162,13 +203,18 @@ export class SignalManagerService {
      * @returns The decrypted message string.
      */
   async decryptMessageAsync(remoteUserId, cipherText) {
-    return cipherText;
+    //return cipherText;
     var sessionCipher = this.store.loadSessionCipher(remoteUserId);
 
     if (sessionCipher == null) {
+      console.log("#hasan sessioncipher not exists");
       var address = new SignalProtocolAddress(remoteUserId, 123);
-      var sessionCipher = new SessionCipher(this.store, address);
+      sessionCipher = new SessionCipher(this.store, address);
+      console.log("#hasan sessionchipher created during decrypt",sessionCipher);
       this.store.storeSessionCipher(remoteUserId, sessionCipher);
+    }
+    else{
+      console.log("#hasan sessioncipher exists");
     }
 
     var messageHasEmbeddedPreKeyBundle = cipherText.type == 3;
@@ -176,10 +222,12 @@ export class SignalManagerService {
     // Returns a promise that resolves when the message is decrypted or
     // rejects if the identityKey differs from a previously seen identity for this address.
     if (messageHasEmbeddedPreKeyBundle) {
+      console.log("#hasan decryptPreKeyWhisperMessage with sessioncipher",sessionCipher);
       var decryptedMessage = await sessionCipher.decryptPreKeyWhisperMessage(cipherText.body, 'binary');
       return new TextDecoder().decode(new Uint8Array(decryptedMessage));
       // return util.toString(decryptedMessage);
     } else {
+      console.log("#hasan decryptWhisperMessage sessioncipher",sessionCipher);
       // Decrypt a normal message using an existing session
       var decryptedMessage = await sessionCipher.decryptWhisperMessage(cipherText.body, 'binary');
       return new TextDecoder().decode(new Uint8Array(decryptedMessage));

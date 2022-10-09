@@ -5,7 +5,7 @@ import { MqttClient } from 'mqtt';
 import { Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MqttNonPerCommonTopic, MqttNonPerTopic } from '../../models/mqtt-non-persistent-topic-enum';
-import { MqttPerTopic } from '../../models/mqtt-persistent-topic-enum';
+import { MqttPerCommonTopic, MqttPerTopic } from '../../models/mqtt-persistent-topic-enum';
 import { MqttUtility } from '../../../app/utility/mqtt-utility/mqtt-utility';
 import { Utility } from '../../../app/utility/utility';
 import { PouchDbService } from '../clientDB/pouch-db.service';
@@ -87,6 +87,9 @@ export class MqttConnectorService {
     for (const topic of Object.values(MqttPerTopic)) {
       topics.push(MqttUtility.parseMqttTopic(topic, Utility.getCurrentUserId()));
       topics.push(MqttUtility.parseMqttTopic(topic, communityId));
+    }
+    for (const topic of Object.values(MqttPerCommonTopic)) {
+      topics.push(MqttUtility.parseMqttTopic(topic, Utility.getCommonTopicId()));
     }
     this.subscribeToPersistentClient(topics);
   };
@@ -278,9 +281,9 @@ export class MqttConnectorService {
         from: Utility.getCurrentUserId(),
         logout: logout
       }
-      const removeSignalProtocolSessionTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.removeSignalProtocolSession, Utility.getCommonTopicId());
+      const removeSignalProtocolSessionTopic = MqttUtility.parseMqttTopic(MqttPerCommonTopic.removeSignalProtocolSession, Utility.getCommonTopicId());
       console.log('MqttConnectorService: publishing remove signal session',signalProtocolPayload,'in',removeSignalProtocolSessionTopic);
-      this.publishToNonPersistentClient(removeSignalProtocolSessionTopic,signalProtocolPayload,false);
+      this.publishToPersistentClient(removeSignalProtocolSessionTopic,signalProtocolPayload);
   }
 
   async publishToPersistentClient(topic: string, payload: any) {
@@ -357,7 +360,7 @@ export class MqttConnectorService {
     console.log(
       'MqttConnectorService: destroying mqtt connection'
     );
-    this.publishRemoveSignalProtocolSession();
+    //this.publishRemoveSignalProtocolSession();
     this.unsubscribe();
     if (this.persistentClient) this.persistentClient.end();
     if (this.nonPersistentClient) this.nonPersistentClient.end();

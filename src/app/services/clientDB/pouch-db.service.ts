@@ -46,13 +46,13 @@ export class PouchDbService {
 
   async init() {
     console.log("Puchdb db initialization start")
-    await this.createAllDbInstance();
-    console.log("Puchdb db initialization complete");
+    const res = await this.createAllDbInstance();
+    console.log("Puchdb db initialization complete response", res);
     this.dbInitializationCompleteSubscription.next(true);
   }
 
   async createAllDbInstance() {
-    await Promise.all([
+    return await Promise.all([
       this.createSignalStoreDB(),
       this.createMessageDB(),
       //this.createMsgStatusDB(),
@@ -73,18 +73,23 @@ export class PouchDbService {
   }
 
   async createSignalStoreDB() {
-    const isDbAvailable = await this.getSignalStoreDbStatus();
-    if (!this.authService.isLoggedIn || isDbAvailable) return;
-    try {
-      this.signalStoreDB = new PouchDB(this.signalStoreDBName, {
-        revs_limit: 1,
-        auto_compaction: true,
-      });
-    } catch (err) {
-      console.error(
-        'PouchDbManagerService: error in creating signalStore db instance'
-      );
-    }
+    return new Promise(async (resolve, reject) => {
+      const isDbAvailable = await this.getSignalStoreDbStatus();
+      if (!this.authService.isLoggedIn || isDbAvailable) return;
+      try {
+        this.signalStoreDB = new PouchDB(this.signalStoreDBName, {
+          revs_limit: 1,
+          auto_compaction: true,
+        });
+        console.log("#hasan Created signalStoreDB done", this.signalStoreDB)
+        resolve(this.signalStoreDB)
+      } catch (err) {
+        console.error(
+          'PouchDbManagerService: error in creating signalStore db instance'
+        );
+        reject(err)
+      }
+    })
   }
 
   async saveSignalStoreData(
@@ -99,11 +104,11 @@ export class PouchDbService {
             .upsert(currentUserId, (doc) => {
               doc._id = currentUserId;
               doc[key] = value;
-              console.log("Updated store doc", doc);
+              console.log("#hasan Updated store doc", doc);
               return doc;
             })
             .then((res) => {
-              console.log("Signal store data save done key", key, "response", res)
+              console.log("#hasan Signal store data save done key", key, "response", res)
               resolve({
                 success: true,
               });
@@ -118,9 +123,10 @@ export class PouchDbService {
         return Promise.reject(error);
       }
     } else {
-      return new Promise((resolve) =>
-        resolve('signal store data not saved in signal store db as db not available')
-      );
+      console.warn('#hasan signal store data not saved in signal store db as db not available ', "isLoggedIn", this.authService.isLoggedIn, "isDbAvailable", isDbAvailable)
+      // return new Promise((resolve) =>
+      //   resolve('signal store data not saved in signal store db as db not available')
+      // );
     }
   }
 
@@ -257,19 +263,24 @@ export class PouchDbService {
   // }
 
   async createMessageDB() {
-    const isDbAvailable = await this.getMessageDbStatus();
-    if (!this.authService.isLoggedIn || isDbAvailable) return;
-    try {
-      this.messageDB = new PouchDB(this.messageDBName, {
-        revs_limit: 1,
-        auto_compaction: true,
-      });
-      this.changeInMessageDB();
-    } catch (err) {
-      console.error(
-        'PouchDbManagerService: error in creating message db instance'
-      );
-    }
+    return new Promise(async (resolve, reject) => {
+      const isDbAvailable = await this.getMessageDbStatus();
+      if (!this.authService.isLoggedIn || isDbAvailable) return;
+      try {
+        this.messageDB = new PouchDB(this.messageDBName, {
+          revs_limit: 1,
+          auto_compaction: true,
+        });
+        this.changeInMessageDB();
+        console.log("Created messageDb done", this.messageDB)
+        resolve(this.messageDB)
+      } catch (err) {
+        console.error(
+          'PouchDbManagerService: error in creating message db instance'
+        );
+        reject(err);
+      }
+    });
   }
 
   async getMessageDbStatus() {
@@ -334,7 +345,7 @@ export class PouchDbService {
                 doc.messageStatus = MessageStatus.sent;
               }
               doc.messageChangesEmit = MessageChangesEmit.messageStatus;
-              console.log("after updating message status doc",doc)
+              console.log("after updating message status doc", doc)
               return doc;
             })
             .then(() => {
@@ -391,7 +402,7 @@ export class PouchDbService {
               return doc;
             })
             .then(() => {
-              console.log("after updating message doc",message)
+              console.log("after updating message doc", message)
               resolve({
                 success: true,
               });
@@ -498,6 +509,7 @@ export class PouchDbService {
   }
 
   async createChatRoomDB() {
+    return new Promise(async(resolve,reject)=>{
     const isDbAvailable = await this.getChatRoomDbStatus();
     if (!this.authService.isLoggedIn || isDbAvailable) return;
     try {
@@ -505,11 +517,15 @@ export class PouchDbService {
         revs_limit: 1,
         auto_compaction: true,
       });
+      console.log("Created chatRoomDB done", this.chatRoomDB)
+      resolve(this.chatRoomDB);
     } catch (err) {
       console.error(
         'PouchDbManagerService: error in creating chatRoom db instance'
       );
+      reject(err);
     }
+  });
   }
 
   async getChatRoomDbStatus() {
@@ -545,7 +561,7 @@ export class PouchDbService {
         roomData._id = roomData.id;
         return new Promise((resolve, reject) => {
           this.chatRoomDB
-          .upsert(roomData._id, (doc) => {
+            .upsert(roomData._id, (doc) => {
               roomData.roomOrderId = roomData.roomOrderId || 0;
               doc = roomData;
               doc.chatRoomChangesEmit = chatRoomChangesEmit.roomData;
@@ -638,10 +654,10 @@ export class PouchDbService {
           id: roomId,
         },
       })
-      .catch((err)=> {
-        console.error("Get all chat room docs error", err);
-      });
-      return room.docs &&  room.docs[0];
+        .catch((err) => {
+          console.error("Get all chat room docs error", err);
+        });
+      return room.docs && room.docs[0];
     }
     else {
       console.warn("chatRoomDB is not available");

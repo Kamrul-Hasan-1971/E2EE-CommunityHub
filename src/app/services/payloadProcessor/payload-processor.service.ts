@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { MessageStatus } from 'src/app/models/message-status-enum';
 import { MqttNonPerCommonTopic, MqttNonPerTopic } from 'src/app/models/mqtt-non-persistent-topic-enum';
-import { MqttPerTopic } from 'src/app/models/mqtt-persistent-topic-enum';
+import { MqttPerCommonTopic, MqttPerTopic } from 'src/app/models/mqtt-persistent-topic-enum';
 import { AcknowledgementType } from 'src/app/models/acknowledgement-type-enum';
 import { Utility } from 'src/app/utility/utility';
 import { PouchDbService } from '../clientDB/pouch-db.service';
@@ -39,7 +39,7 @@ export class PayloadProcessorService {
   async decryptMessage(senderId, message: string) {
     let decryptedMessage = await this.signalManagerService.decryptMessageAsync(senderId, message)
       .catch(err => {
-        console.error(err);
+        console.error("#hasan error during decrypting", err);
         return message;
       })
     return decryptedMessage;
@@ -50,7 +50,7 @@ export class PayloadProcessorService {
       .pipe(takeUntil(this.destroyed$))
       .subscribe(async (mqttPayload: any) => {
         const { topic, payload } = mqttPayload;
-        if (topic.endsWith(MqttNonPerCommonTopic.removeSignalProtocolSession)) {
+        if (topic.endsWith(MqttPerCommonTopic.removeSignalProtocolSession)) {
           if (payload.from != Utility.getCurrentUserId()) {
             this.signalManagerService.removeSessionFromUser(payload);
           }
@@ -62,9 +62,14 @@ export class PayloadProcessorService {
             payload.readUsers = new Set([payload.from]);
             payload.messageStatus = MessageStatus.delivered;
 
-            console.log("Encrypted incomeing Message", payload.message);
-            payload.message = await this.decryptMessage(payload.from, payload.message);
-            console.log("After decrypte incomeing Message", payload.message);
+            if (payload.from != Utility.getCommunitityId()) {
+              console.log("#hasan Encrypted incomeing Message", payload.message);
+              payload.message = await this.decryptMessage(payload.from, payload.message);
+              console.log("#hasan After decrypte incomeing Message", payload.message);
+            }
+
+            console.log("#hasan message payload for room", payload)
+
             this.commonService.roomListChangesForLastMessage$.next(payload);
             this.pouchDbService.saveMessageToMessageDb(payload);
             this.publishMessageDeliveredStatus(payload);

@@ -11,6 +11,7 @@ export class UserService {
 
   allUsers: User[] = [];
   currentUser: any;
+  redirectFromLoggedIn: boolean = false;
 
   //db
   usersRef: AngularFirestoreCollection<User>;

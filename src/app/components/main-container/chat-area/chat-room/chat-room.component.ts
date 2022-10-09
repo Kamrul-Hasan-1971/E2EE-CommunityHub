@@ -182,9 +182,11 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
           messageStatus: MessageStatus.read,
           from: Utility.getCurrentUserId(),
         };
-        const msgRoomId = Utility.getMsgRoomId(message.to, message.from);
         console.log('Publishing read status', 'msgId', message.messageId, 'statusPayload', statusPayload);
-        this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus, msgRoomId), statusPayload);
+        this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus, Utility.getCurrentActiveRoomId()), statusPayload);
+        if (!message.isGroupRoom) {
+          this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus, Utility.getCurrentUserId()), statusPayload);
+        }
       }
     })
   }
@@ -216,8 +218,10 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
       this.dataStateService.addMessageToRoomConversationState(this.roomId, messageObj);
       this.commonService.roomListChangesForLastMessage$.next(messageObj);
 
-      const encryptedMessage = await this.encryptMessage(message);
-      messageObjForReceiver.message = encryptedMessage;
+      if (Utility.getCurrentActiveRoomId() != Utility.getCommunitityId()) {
+        const encryptedMessage = await this.encryptMessage(message);
+        messageObjForReceiver.message = encryptedMessage;
+      }
 
       let publishTopic = MqttUtility.parseMqttTopic(MqttPerTopic.roomInbox, this.roomId);
       this.mqttConnectorService.publishToPersistentClient(publishTopic, messageObjForReceiver);
@@ -245,9 +249,11 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         messageStatus: MessageStatus.read,
         from: Utility.getCurrentUserId(),
       };
-      const msgRoomId = Utility.getMsgRoomId(message.to, message.from);
       console.log('Publishing read status', 'msgId', message.messageId, 'statusPayload', statusPayload);
-      this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus, msgRoomId), statusPayload);
+      this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus, Utility.getCurrentActiveRoomId()), statusPayload);
+      if (!message.isGroupRoom) {
+        this.mqttConnectorService.publishToPersistentClient(MqttUtility.parseMqttTopic(MqttPerTopic.messageStatus, Utility.getCurrentUserId()), statusPayload);
+      }
     }
   }
 
@@ -306,10 +312,22 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   }
 
   shouldPublishReadStatus(message) {
-    if (!message) return false;
-    if (message.from == Utility.getCurrentUserId()) return false;
-    if (message.messageStatus == MessageStatus.read) return false;
-    if (message.readUsers.has(Utility.getCurrentUserId())) return false;
+    if (!message) {
+      console.log("message is empty, no need to publish")
+      return false;
+    }
+    if (message.from == Utility.getCurrentUserId()) {
+      console.log("message from currentUserId, no need to publish")
+      return false;
+    }
+    if (message.messageStatus == MessageStatus.read) {
+      console.log("message status is already read, no need to publish")
+      return false;
+    }
+    if (message.readUsers.has(Utility.getCurrentUserId())) {
+      console.log("currentuser id is present int message readUser set, no need to publish")
+      return false;
+    }
     return true;
   }
 

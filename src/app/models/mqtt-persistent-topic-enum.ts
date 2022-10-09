@@ -3,5 +3,9 @@ export enum MqttPerTopic {
   messageStatus = 'messageStatus',
   //read = 'read',
   //delivered = 'delivered',
-  events = 'events',
+  //events = 'events',
+}
+
+export enum MqttPerCommonTopic {
+  removeSignalProtocolSession = 'removeSignalProtocolSession',
 }

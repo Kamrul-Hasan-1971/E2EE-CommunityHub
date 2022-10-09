@@ -56,6 +56,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     Utility.setCommunitityId(this.communityRoom.id);
     this.loaderService.setLoading(true);
     this.currentUser = Utility.getCurrentUser();
+    this.signalManagerService.init();
     this.init();
     this.getRoomData();
     this.initSearchForm();
@@ -68,8 +69,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }, 60000);
   }
 
+
+
   subscribechangesRoomListForLastMessage() {
-    this.subs.push(this.commonService.roomListChangesForLastMessage$.subscribe(async(lastMessageObj) => {
+    this.subs.push(this.commonService.roomListChangesForLastMessage$.subscribe(async (lastMessageObj) => {
       let messageRoomId = lastMessageObj.from;
       if (lastMessageObj.from == Utility.getCurrentUserId() || lastMessageObj.to == this.communityRoom.id) {
         messageRoomId = lastMessageObj.to;
@@ -132,17 +135,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
   // }
 
   async init() {
-    await this.pouchDbService.init();
-    this.payloadProcessorService.payloadProcessorServiceInit();
-    this.mqttConnectorService.mqttConnectorServiceInit();
+    if (!this.userService.redirectFromLoggedIn) {
+      this.userService.redirectFromLoggedIn = false;
+      await this.pouchDbService.init();
+      this.payloadProcessorService.payloadProcessorServiceInit();
+      this.mqttConnectorService.mqttConnectorServiceInit();
+    }
     //this.mqttConnectorService.publishRemoveSignalProtocolSession(false);
     let previouslyCreatedSignalData = await this.pouchDbService.getSignalStoreData()
-      .catch(async (err) => {
-        console.log("Error when fetching store data from db", err);
-        await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
-        this.mqttConnectorService.publishRemoveSignalProtocolSession();
-        console.log("Newly signal data generate done");
-      })
+    //   .catch(async (err) => {
+    //     console.log("Error when fetching store data from db", err);
+    //     //await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
+    //     //this.mqttConnectorService.publishRemoveSignalProtocolSession();
+    //     //console.log("Newly signal data generate done");
+    //   })
     if (previouslyCreatedSignalData && previouslyCreatedSignalData[0]) {
       this.signalManagerService.initaitePreviouslyCreatedSignalData(previouslyCreatedSignalData[0]);
       console.log("previouslyCreatedSignalData", previouslyCreatedSignalData[0]);
@@ -176,7 +182,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const roomDataFromChatRoomDB: any[] = await this.pouchDbService.getAllChatRoom();
     console.log("roomDataFromChatRoomDB", roomDataFromChatRoomDB);
 
-    roomDataFromChatRoomDB.forEach(async(roomFromDb) => {
+    roomDataFromChatRoomDB.forEach(async (roomFromDb) => {
       let roomState = await this.roomService.getRoomDataByRoomID(roomFromDb.doc.id);
       if (roomState) {
         roomState.hasUnreadMessage = roomFromDb.doc.hasUnreadMessage;

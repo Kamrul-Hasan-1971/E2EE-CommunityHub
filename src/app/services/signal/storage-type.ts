@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StorageType, Direction, SessionRecordType, SignalProtocolAddress, PreKeyPairType, SignedPreKeyPairType, SessionCipher } from '@privacyresearch/libsignal-protocol-typescript'
-import { PouchDbService } from '../clientDB/pouch-db.service'
+// import { PouchDbService } from '../clientDB/pouch-db.service'
+import { EventService } from '../event.service'
 
 export class SignalProtocolStore implements StorageType {
     private _store: Record<string, StoreValue>
@@ -8,7 +9,7 @@ export class SignalProtocolStore implements StorageType {
         SENDING: 1,
         RECEIVING: 2,
     }
-    constructor(private pouchDbService : PouchDbService) {
+    constructor(private eventService: EventService) {
         this._store = {}
     }
     async getIdentityKeyPair(): Promise<KeyPairType | undefined> {
@@ -25,13 +26,19 @@ export class SignalProtocolStore implements StorageType {
         }
         throw new Error('Stored Registration ID is not a number')
     }
-    put(key: string, value: StoreValue): void {
+    put(key: string, value: StoreValue, shouldUpdate = true): void {
         if (key === undefined || value === undefined || key === null || value === null)
             throw new Error('Tried to store undefined/null')
         this._store[key] = value;
         const shouldUpdateInPouchDB = this.shouldUpdateInPouchDb(key);
-        if(shouldUpdateInPouchDB){
-            this.pouchDbService.saveSignalStoreData(key,value);
+        if (shouldUpdateInPouchDB && shouldUpdate) {
+            // this.pouchDbService.saveSignalStoreData(key, value);
+            //console.log("#hasan eventService.updateSignalClienDbData$",this.eventService.updateSignalClienDbData$)
+            this.eventService.updateSignalClienDbData$.next({
+                key: key,
+                value: value,
+                op: "put"
+            })
         }
     }
     get(key: string, defaultValue: StoreValue): StoreValue {
@@ -46,8 +53,12 @@ export class SignalProtocolStore implements StorageType {
         if (key === null || key === undefined) throw new Error('Tried to remove value for undefined/null key')
         delete this._store[key];
         const shouldUpdateInPouchDB = this.shouldUpdateInPouchDb(key);
-        if(shouldUpdateInPouchDB){
-        this.pouchDbService.removeSignalStoreData(key);
+        if (shouldUpdateInPouchDB) {
+            //this.pouchDbService.removeSignalStoreData(key);
+            this.eventService.updateSignalClienDbData$.next({
+                key: key,
+                op: "remove"
+            })
         }
     }
     isTrustedIdentity(identifier: string, identityKey: ArrayBuffer,
@@ -80,8 +91,7 @@ export class SignalProtocolStore implements StorageType {
         }
         throw new Error(`Identity key has wrong type`)
     }
-    removeIdentity(identifier: string)
-    {
+    removeIdentity(identifier: string) {
         this.remove('identityKey' + identifier);
     }
     async saveIdentity(identifier: string, identityKey: ArrayBuffer): Promise<boolean> {
@@ -156,14 +166,14 @@ export class SignalProtocolStore implements StorageType {
         }
     }
     /* Stores and loads a session cipher */
-    storeSessionCipher(identifier:string, cipher:SessionCipher) {
+    storeSessionCipher(identifier: string, cipher: SessionCipher) {
         this.put('cipher' + identifier, cipher);
     }
-    removeSessionCipher(identifier:string) {
+    removeSessionCipher(identifier: string) {
         this.remove('cipher' + identifier);
     }
-    loadSessionCipher(identifier:string) : SessionCipher {
-        var cipher:SessionCipher = this.get('cipher' + identifier, undefined) as SessionCipher;
+    loadSessionCipher(identifier: string): SessionCipher {
+        var cipher: SessionCipher = this.get('cipher' + identifier, undefined) as SessionCipher;
         if (cipher == undefined) {
             return null;
         } else {
@@ -171,16 +181,15 @@ export class SignalProtocolStore implements StorageType {
         }
     }
 
-    shouldUpdateInPouchDb(key)
-    {
-       // return true;
-        //if(key.includes('cipher')) return false;
-        if(key.includes('session')) return false;
+    shouldUpdateInPouchDb(key) {
+        // return true;
+        if (key.includes('cipher')) return false;
+        //if (key.includes('session')) return false;
         return true;
     }
 }
 
-type StoreValue = KeyPairType | string | number | KeyPairType | PreKeyType | SignedPreKeyType | ArrayBuffer | undefined| SessionCipher
+type StoreValue = KeyPairType | string | number | KeyPairType | PreKeyType | SignedPreKeyType | ArrayBuffer | undefined | SessionCipher
 
 interface KeyPairType {
     pubKey: ArrayBuffer
