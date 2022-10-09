@@ -11,7 +11,7 @@
         </ul>
     </div>
     <div style="max-height: 45%; font-weight: 500; font-size:15px">
-        <p>Read Users : {{message.readUsers.size >0 ? message.readUsers.size-1 : 0}}</p>
+        <p>Read Users : {{message.readUsers.size-1}}</p>
         <ul>
             <li *ngFor="let readUserId of message.readUsers" [ngClass]="{ 'hide': readUserId==message.from}">
                 <span>{{this.dataStateService.getRoomNameFromRoomState(readUserId)}}</span>

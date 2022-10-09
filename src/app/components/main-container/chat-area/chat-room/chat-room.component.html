@@ -38,7 +38,7 @@
               alt="" /></span>
           <span *ngIf="m.messageStatus != messageStatusEnum.read && m.readUsers.size > 1" style="margin-left: 8px;"><img
               class="svg-icon-set-height" src="../../../../../assets/eye-icon.svg" alt="" /><span style="margin-left: 5px;
-              font-size: x-small; color: darkgray;">{{ (m.from == currentUser)? m.readUsers.size-1 : m.readUsers.size}}</span></span>
+              font-size: x-small; color: darkgray;">{{m.readUsers.size-1}}</span></span>
           <span *ngIf="m.messageStatus == messageStatusEnum.read" style="margin-left: 8px;"><img
               class="svg-icon-set-height" src="../../../../../assets/eye-icon-blue.svg" alt="" /></span>
         </span>
