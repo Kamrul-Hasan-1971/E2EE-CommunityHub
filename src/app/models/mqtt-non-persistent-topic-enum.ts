@@ -5,6 +5,5 @@ export enum MqttNonPerTopic {
 }
 
 export enum MqttNonPerCommonTopic {
-  // removeSignalProtocolSession = 'removeSignalProtocolSession',
   userCreate = 'userCreate',
 }

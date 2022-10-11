@@ -42,6 +42,9 @@ export class SignInComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    if (this.authService.isLoggedIn) {
+      this.router.navigate(['']);
+    }
     this.initSignInForm();
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
   }
@@ -71,26 +74,26 @@ export class SignInComponent implements OnInit {
 
   async initiateAfterSignIn() {
     let currentAuthUser = await this.authService.getCurrentAuthUser()
-    .catch(error => {
-      window.alert(error);
-      console.error(error);
-      this.loading = false;
-      return
-    });
-    
+      .catch(error => {
+        window.alert(error);
+        console.error(error);
+        this.loading = false;
+        return
+      });
+
     let currentUser: any = await this.userService.getCurrentUser(currentAuthUser.uid)
-    .catch(error => {
-      this.loading = false;
-      window.alert(error);
-      console.error(error);
-      this.loading = false;
+      .catch(error => {
+        this.loading = false;
+        window.alert(error);
+        console.error(error);
+        this.loading = false;
       });
     if (currentAuthUser.emailVerified && !currentUser.emailVerified) {
       currentUser.emailVerified = true;
-      let newUserCreatePublishTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.userCreate,Utility.getCommonTopicId());
-      console.log("Publishing new user create in toopic",newUserCreatePublishTopic,"currentUser payload",currentUser)
-      this.mqttConnectorService.publishToNonPersistentClient(newUserCreatePublishTopic,currentUser);
-      
+      let newUserCreatePublishTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.userCreate, Utility.getCommonTopicId());
+      console.log("Publishing new user create in toopic", newUserCreatePublishTopic, "currentUser payload", currentUser)
+      this.mqttConnectorService.publishToNonPersistentClient(newUserCreatePublishTopic, currentUser);
+
       Utility.setCurrentUser(currentUser);
       await this.userService.updateUser(currentUser);
       // await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
