@@ -182,7 +182,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const roomDataFromChatRoomDB: any[] = await this.pouchDbService.getAllChatRoom();
     console.log("roomDataFromChatRoomDB", roomDataFromChatRoomDB);
 
-    roomDataFromChatRoomDB.forEach(async (roomFromDb) => {
+    roomDataFromChatRoomDB && roomDataFromChatRoomDB.forEach(async (roomFromDb) => {
       let roomState = await this.roomService.getRoomDataByRoomID(roomFromDb.doc.id);
       if (roomState) {
         roomState.hasUnreadMessage = roomFromDb.doc.hasUnreadMessage;
