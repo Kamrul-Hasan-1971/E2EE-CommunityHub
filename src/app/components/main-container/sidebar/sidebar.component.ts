@@ -12,8 +12,8 @@ import { PouchDbService } from '../../../services/clientDB/pouch-db.service';
 import { DataStateService } from '../../../services/data-state.service';
 import { RoomService } from '../../../services/room/room.service';
 import { LoaderService } from 'src/app/services/loader/loader.service';
-import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
-import { SignalServerStoreService } from 'src/app/services/signal/signal-server-store.service';
+//import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
+//import { SignalServerStoreService } from 'src/app/services/signal/signal-server-store.service';
 import { EventService } from 'src/app/services/event.service';
 
 
@@ -44,8 +44,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private dataStateService: DataStateService,
     private roomService: RoomService,
     private loaderService: LoaderService,
-    private signalManagerService: SignalManagerService,
-    private signalServerStoreService: SignalServerStoreService,
+    //private signalManagerService: SignalManagerService,
+    //private signalServerStoreService: SignalServerStoreService,
     private eventService: EventService,
     //private cdRef: ChangeDetectorRef,
   ) {
@@ -56,7 +56,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     Utility.setCommunitityId(this.communityRoom.id);
     this.loaderService.setLoading(true);
     this.currentUser = Utility.getCurrentUser();
-    this.signalManagerService.init();
+    //this.signalManagerService.init();
     this.init();
     this.getRoomData();
     this.initSearchForm();
@@ -142,17 +142,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.mqttConnectorService.mqttConnectorServiceInit();
     }
     //this.mqttConnectorService.publishRemoveSignalProtocolSession(false);
-    let previouslyCreatedSignalData = await this.pouchDbService.getSignalStoreData()
+    //let previouslyCreatedSignalData = await this.pouchDbService.getSignalStoreData()
     //   .catch(async (err) => {
     //     console.log("Error when fetching store data from db", err);
     //     //await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
     //     //this.mqttConnectorService.publishRemoveSignalProtocolSession();
     //     //console.log("Newly signal data generate done");
     //   })
-    if (previouslyCreatedSignalData && previouslyCreatedSignalData[0]) {
-      this.signalManagerService.initaitePreviouslyCreatedSignalData(previouslyCreatedSignalData[0]);
-      console.log("previouslyCreatedSignalData", previouslyCreatedSignalData[0]);
-    }
+    // if (previouslyCreatedSignalData && previouslyCreatedSignalData[0]) {
+    //   this.signalManagerService.initaitePreviouslyCreatedSignalData(previouslyCreatedSignalData[0]);
+    //   console.log("previouslyCreatedSignalData", previouslyCreatedSignalData[0]);
+    // }
   }
 
   subscribeToNewUserInCommunityPayload() {
@@ -221,7 +221,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     await this.pouchDbService.deleteAllPouchDB();
     await this.authService.SignOut();
     this.mqttConnectorService.publishActiveStatus(false);
-    await this.signalServerStoreService.deletePreKeyBundle(Utility.getCurrentUserId());
+    //await this.signalServerStoreService.deletePreKeyBundle(Utility.getCurrentUserId());
     this.loaderService.setLoading(false);
   }
 

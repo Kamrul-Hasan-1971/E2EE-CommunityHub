@@ -15,7 +15,7 @@ import { PouchDbService } from '../../../../services/clientDB/pouch-db.service';
 import { DataStateService } from '../../../../services/data-state.service';
 import { UserService } from '../../../../services/users/user.service';
 import { RoomData } from '../../../../interfaces/roomData';
-import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
+//import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
 import { MessageStatus } from 'src/app/models/message-status-enum';
 import { MessageStatusDocument } from 'src/app/models/message-status-document';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -64,7 +64,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     private commonService: CommonService,
     private dataStateService: DataStateService,
     private userService: UserService,
-    private signalManagerService: SignalManagerService,
+    //private signalManagerService: SignalManagerService,
     private changeDetectorRef: ChangeDetectorRef,
     private payloadProcessorService: PayloadProcessorService,
     private eventService: EventService
@@ -295,14 +295,15 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   }
 
   async encryptMessage(message: string) {
-    console.log("Ongoing PlainText Message", message);
-    let encryptedMessage = await this.signalManagerService.encryptMessageAsync(Utility.getCurrentActiveRoomId(), message)
-      .catch(err => {
-        console.error(err);
-        return message;
-      })
-    console.log("Ongoing encryptedMessage", encryptedMessage)
-    return encryptedMessage;
+    return message;
+    // console.log("Ongoing PlainText Message", message);
+    // let encryptedMessage = await this.signalManagerService.encryptMessageAsync(Utility.getCurrentActiveRoomId(), message)
+    //   .catch(err => {
+    //     console.error(err);
+    //     return message;
+    //   })
+    // console.log("Ongoing encryptedMessage", encryptedMessage)
+    // return encryptedMessage;
   }
 
   scrollToId(id) {

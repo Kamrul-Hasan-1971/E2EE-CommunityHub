@@ -5,7 +5,7 @@ import { MqttNonPerCommonTopic } from 'src/app/models/mqtt-non-persistent-topic-
 import { PouchDbService } from 'src/app/services/clientDB/pouch-db.service';
 import { MqttConnectorService } from 'src/app/services/mqtt/mqtt-connector.service';
 import { PayloadProcessorService } from 'src/app/services/payloadProcessor/payload-processor.service';
-import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
+//import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
 import { MqttUtility } from 'src/app/utility/mqtt-utility/mqtt-utility';
 import { Utility } from 'src/app/utility/utility';
 import { AuthService } from '../../services/auth/auth.service';
@@ -35,7 +35,7 @@ export class SignInComponent implements OnInit {
     private route: ActivatedRoute,
     private formBuilder: FormBuilder,
     private userService: UserService,
-    private signalManagerService: SignalManagerService,
+    //private signalManagerService: SignalManagerService,
     private mqttConnectorService: MqttConnectorService,
     private pouchDbService: PouchDbService,
     private payloadProcessorService: PayloadProcessorService
@@ -99,8 +99,8 @@ export class SignInComponent implements OnInit {
       // await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
     }
     await this.pouchDbService.init();
-    this.signalManagerService.init();
-    await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
+    //this.signalManagerService.init();
+    //await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
     this.payloadProcessorService.payloadProcessorServiceInit();
     this.mqttConnectorService.mqttConnectorServiceInit();
     this.loading = false;

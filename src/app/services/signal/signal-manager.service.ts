@@ -15,9 +15,9 @@ import { PouchDbService } from '../clientDB/pouch-db.service';
 //import { Utility } from 'src/app/utility/utility';
 import { EventService } from '../event.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+// @Injectable({
+//   providedIn: 'root'
+// })
 export class SignalManagerService {
   userId;
   private store: SignalProtocolStore;
@@ -164,7 +164,7 @@ export class SignalManagerService {
      * @param message The message to send.
      */
   async encryptMessageAsync(remoteUserId, message) {
-    //return message;
+    return message;
     var sessionCipher: SessionCipher = this.store.loadSessionCipher(remoteUserId);
 
     if (sessionCipher == null) {
@@ -203,7 +203,7 @@ export class SignalManagerService {
      * @returns The decrypted message string.
      */
   async decryptMessageAsync(remoteUserId, cipherText) {
-    //return cipherText;
+    return cipherText;
     var sessionCipher = this.store.loadSessionCipher(remoteUserId);
 
     if (sessionCipher == null) {

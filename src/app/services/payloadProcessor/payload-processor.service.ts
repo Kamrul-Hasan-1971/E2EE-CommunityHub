@@ -7,7 +7,7 @@ import { AcknowledgementType } from 'src/app/models/acknowledgement-type-enum';
 import { Utility } from 'src/app/utility/utility';
 import { PouchDbService } from '../clientDB/pouch-db.service';
 import { MqttConnectorService } from '../mqtt/mqtt-connector.service';
-import { SignalManagerService } from '../signal/signal-manager.service';
+//import { SignalManagerService } from '../signal/signal-manager.service';
 import { MqttUtility } from 'src/app/utility/mqtt-utility/mqtt-utility';
 import { MessageStatusDocument } from 'src/app/models/message-status-document';
 import { CommonService } from '../common/common.service';
@@ -22,7 +22,7 @@ export class PayloadProcessorService {
   constructor(
     private mqttConnectorService: MqttConnectorService,
     private pouchDbService: PouchDbService,
-    private signalManagerService: SignalManagerService,
+    //private signalManagerService: SignalManagerService,
     private commonService: CommonService,
     private eventService: EventService
   ) { }
@@ -37,12 +37,13 @@ export class PayloadProcessorService {
   }
 
   async decryptMessage(senderId, message: string) {
-    let decryptedMessage = await this.signalManagerService.decryptMessageAsync(senderId, message)
-      .catch(err => {
-        console.error("#hasan error during decrypting", err);
-        return message;
-      })
-    return decryptedMessage;
+    return message;
+    // let decryptedMessage = await this.signalManagerService.decryptMessageAsync(senderId, message)
+    //   .catch(err => {
+    //     console.error("#hasan error during decrypting", err);
+    //     return message;
+    //   })
+    // return decryptedMessage;
   }
 
   subscribeTomqttPayload$(): void {
@@ -52,7 +53,7 @@ export class PayloadProcessorService {
         const { topic, payload } = mqttPayload;
         if (topic.endsWith(MqttPerCommonTopic.removeSignalProtocolSession)) {
           if (payload.from != Utility.getCurrentUserId()) {
-            this.signalManagerService.removeSessionFromUser(payload);
+            //this.signalManagerService.removeSessionFromUser(payload);
           }
         }
         else if (topic.endsWith(MqttPerTopic.roomInbox)) {

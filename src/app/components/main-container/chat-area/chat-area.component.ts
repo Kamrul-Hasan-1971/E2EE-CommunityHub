@@ -2,7 +2,7 @@ import { AfterViewInit, ChangeDetectorRef, Component, Input, OnDestroy, OnInit }
 import { FormBuilder, FormGroup, NgForm, Validators } from '@angular/forms';
 import { BehaviorSubject, debounceTime, Subject, Subscription, takeUntil, tap } from 'rxjs';
 //import { PayloadProcessorService } from 'src/app/services/payloadProcessor/payload-processor.service';
-import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
+//import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
 import { Utility } from 'src/app/utility/utility';
 import { RoomService } from '../../../services/room/room.service';
 import * as uuid from 'uuid';
