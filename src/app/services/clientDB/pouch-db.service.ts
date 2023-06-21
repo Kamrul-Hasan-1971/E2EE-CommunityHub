@@ -4,24 +4,20 @@ import PouchDBFind from 'pouchdb-find';
 import * as pouchdbUpsert from 'pouchdb-upsert';
 import PouchDB from 'pouchdb';
 
-
 import { AuthService } from '../auth/auth.service';
 import { Subject } from 'rxjs';
 import { Utility } from 'src/app/utility/utility';
 import { MessageStatus } from 'src/app/models/message-status-enum';
 import { MessageChangesEmit } from 'src/app/models/message-changes-emit-enum';
 import { chatRoomChangesEmit } from 'src/app/models/chatRoom-changes-emit-enum';
-//import { MessageStatusDocument } from 'src/app/models/message-status-document';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PouchDbService {
-
   private signalStoreDB: any;
   private chatRoomDB: any;
   private messageDB: any;
-  //private msgStatusDB: any;
 
   signalStoreDBName: string;
   messageDBName: string;
@@ -33,9 +29,7 @@ export class PouchDbService {
   lastMessageChanges: Subject<any> = new Subject<any>();
   dbInitializationCompleteSubscription: Subject<any> = new Subject<any>();
 
-  constructor(
-    private authService: AuthService
-  ) {
+  constructor(private authService: AuthService) {
     PouchDB.plugin(PouchDBFind);
     PouchDB.plugin(pouchdbUpsert);
     this.signalStoreDBName = 'mqtt_signalStore';
@@ -45,9 +39,12 @@ export class PouchDbService {
   }
 
   async init() {
-    console.log("Puchdb db initialization start")
+    console.log('PouchDbService:: Puchdb db initialization start');
     const res = await this.createAllDbInstance();
-    console.log("Puchdb db initialization complete response", res);
+    console.log(
+      'PouchDbService:: Puchdb db initialization complete response',
+      res
+    );
     this.dbInitializationCompleteSubscription.next(true);
   }
 
@@ -57,7 +54,7 @@ export class PouchDbService {
       this.createMessageDB(),
       //this.createMsgStatusDB(),
       this.createChatRoomDB(),
-    ])
+    ]);
   }
 
   async getSignalStoreDbStatus() {
@@ -81,20 +78,21 @@ export class PouchDbService {
           revs_limit: 1,
           auto_compaction: true,
         });
-        console.log("#hasan Created signalStoreDB done", this.signalStoreDB)
-        resolve(this.signalStoreDB)
+        console.log(
+          'PouchDbService:: Created signalStoreDB done',
+          this.signalStoreDB
+        );
+        resolve(this.signalStoreDB);
       } catch (err) {
         console.error(
-          'PouchDbManagerService: error in creating signalStore db instance'
+          'PouchDbManagerService:; error in creating signalStore db instance'
         );
-        reject(err)
+        reject(err);
       }
-    })
+    });
   }
 
-  async saveSignalStoreData(
-    key: string, value: any
-  ) {
+  async saveSignalStoreData(key: string, value: any) {
     const isDbAvailable = await this.getSignalStoreDbStatus();
     if (this.authService.isLoggedIn && isDbAvailable) {
       try {
@@ -104,35 +102,40 @@ export class PouchDbService {
             .upsert(currentUserId, (doc) => {
               doc._id = currentUserId;
               doc[key] = value;
-              console.log("#hasan Updated store doc", doc);
+              console.log('PouchDbService:: updated store doc', doc);
               return doc;
             })
             .then((res) => {
-              console.log("#hasan Signal store data save done key", key, "response", res)
+              console.log(
+                'PouchDbService:: Signal store data save done key',
+                key,
+                'response',
+                res
+              );
               resolve({
                 success: true,
               });
             })
-            .catch((err) => { reject(err) });
+            .catch((err) => {
+              reject(err);
+            });
         });
       } catch (error) {
-        console.error(
-          'signal store-db-upsert-error',
-          error
-        );
+        console.error('PouchDbService:: signal store-db-upsert-error', error);
         return Promise.reject(error);
       }
     } else {
-      console.warn('#hasan signal store data not saved in signal store db as db not available ', "isLoggedIn", this.authService.isLoggedIn, "isDbAvailable", isDbAvailable)
-      // return new Promise((resolve) =>
-      //   resolve('signal store data not saved in signal store db as db not available')
-      // );
+      console.warn(
+        'PouchDbService:: signal store data not saved in signal store db as db not available ',
+        'isLoggedIn',
+        this.authService.isLoggedIn,
+        'isDbAvailable',
+        isDbAvailable
+      );
     }
   }
 
-  async removeSignalStoreData(
-    key
-  ) {
+  async removeSignalStoreData(key) {
     const isDbAvailable = await this.getSignalStoreDbStatus();
     if (this.authService.isLoggedIn && isDbAvailable) {
       try {
@@ -149,18 +152,22 @@ export class PouchDbService {
                 success: true,
               });
             })
-            .catch((err) => { reject(err) });
+            .catch((err) => {
+              reject(err);
+            });
         });
       } catch (error) {
         console.error(
-          'signal store-db-delete-upsert-error',
+          'PouchDbService:: signal store-db-delete-upsert-error',
           error
         );
         return Promise.reject(error);
       }
     } else {
       return new Promise((resolve) =>
-        resolve('signal store data not saved(delete) in signal store db as db not available')
+        resolve(
+          'signal store data not saved(delete) in signal store db as db not available'
+        )
       );
     }
   }
@@ -170,97 +177,12 @@ export class PouchDbService {
     if (this.authService.isLoggedIn && isDbAvailable) {
       const response = await this.signalStoreDB.find({
         selector: {
-          _id: Utility.getCurrentUserId()
+          _id: Utility.getCurrentUserId(),
         },
       });
       return response.docs;
     }
   }
-
-  // async getMsgStatusDbStatus() {
-  //   if (!this.msgStatusDB) return false;
-  //   try {
-  //     const message = await this.msgStatusDB.info().then((info) => {
-  //       return true;
-  //     });
-  //     return message;
-  //   } catch (error) {
-  //     return false;
-  //   }
-  // }
-
-  // async createMsgStatusDB() {
-  //   const isDbAvailable = await this.getMsgStatusDbStatus();
-  //   if (!this.authService.isLoggedIn || isDbAvailable) return;
-  //   try {
-  //     this.msgStatusDB = new PouchDB(this.msgStatusDBName, {
-  //       revs_limit: 1,
-  //       auto_compaction: true,
-  //     });
-  //     this.changeInMsgStatusDB();
-  //   } catch (err) {
-  //     console.error(
-  //       'PouchDbManagerService: error in creating message db instance'
-  //     );
-  //   }
-  // }
-
-  // async saveMsgStatusToMsgStatusDb(
-  //   msgStatus: MessageStatusDocument,
-  // ) {
-  //   console.log(
-  //     'save message status to msg status DB: ',
-  //     msgStatus
-  //   );
-  //   const isDbAvailable = await this.getMsgStatusDbStatus();
-  //   if (this.authService.isLoggedIn && isDbAvailable) {
-  //     msgStatus._id = msgStatus.messageId;
-  //     try {
-  //       return new Promise((resolve, reject) => {
-  //         this.msgStatusDB
-  //           .upsert(msgStatus._id, (doc: MessageStatusDocument) => {
-  //             doc = msgStatus;
-  //             return doc;
-  //           })
-  //           .then(() => {
-  //             resolve({
-  //               success: true,
-  //             });
-  //           })
-  //           .catch((err) => { reject(err) });
-  //       });
-  //     } catch (error) {
-  //       console.error(
-  //         'msg-status-db-upsert-error',
-  //         error
-  //       );
-  //       return Promise.reject(error);
-  //     }
-  //   } else {
-  //     return new Promise((resolve) =>
-  //       resolve('Message status db is not available')
-  //     );
-  //   }
-  // }
-
-  // changeInMsgStatusDB() {
-  //   if (!this.msgStatusDB) return;
-  //   this.msgStatusDB
-  //     .changes({
-  //       since: 'now',
-  //       live: true,
-  //       include_docs: true,
-  //     })
-  //     .on('change', (change) => {
-  //       if (change && change.doc) {
-  //         this.msgStatusChanges.next(change);
-  //       }
-  //     })
-  //     .on('complete', (info) => { })
-  //     .on('error', (error) => {
-  //       return null;
-  //     });
-  // }
 
   async createMessageDB() {
     return new Promise(async (resolve, reject) => {
@@ -272,12 +194,10 @@ export class PouchDbService {
           auto_compaction: true,
         });
         this.changeInMessageDB();
-        console.log("Created messageDb done", this.messageDB)
-        resolve(this.messageDB)
+        console.log('PouchDbService:: Created messageDb done', this.messageDB);
+        resolve(this.messageDB);
       } catch (err) {
-        console.error(
-          'PouchDbManagerService: error in creating message db instance'
-        );
+        console.error('PouchDbService:: error in creating message db instance');
         reject(err);
       }
     });
@@ -301,20 +221,16 @@ export class PouchDbService {
 
     if (readCounter == doc.roomMemberCount) {
       doc.messageStatus = MessageStatus.read;
-    }
-    else if (readCounter + deliveredCounter == doc.roomMemberCount) {
+    } else if (readCounter + deliveredCounter == doc.roomMemberCount) {
       doc.messageStatus = MessageStatus.delivered;
-    }
-    else if (deliveredCounter + readCounter > 0) {
+    } else if (deliveredCounter + readCounter > 0) {
       doc.messageStatus = MessageStatus.sent;
     }
   }
 
-  async saveMessageStatusToMessageDb(
-    messageStatus: any
-  ) {
+  async saveMessageStatusToMessageDb(messageStatus: any) {
     console.log(
-      'PouchDbService::save Message Status To MessageDb: ',
+      'PouchDbService:: save Message Status To MessageDb: ',
       messageStatus
     );
     const isDbAvailable = await this.getMessageDbStatus();
@@ -335,17 +251,18 @@ export class PouchDbService {
                   doc.deliveredUsers.add(messageStatus.from);
                   this.resolveMessageStatus(doc);
                 }
-              }
-              else if (messageStatus.messageStatus == MessageStatus.read) {
+              } else if (messageStatus.messageStatus == MessageStatus.read) {
                 doc.deliveredUsers.delete(messageStatus.from);
                 doc.readUsers.add(messageStatus.from);
                 this.resolveMessageStatus(doc);
-              }
-              else if (messageStatus.messageStatus == MessageStatus.sent) {
+              } else if (messageStatus.messageStatus == MessageStatus.sent) {
                 doc.messageStatus = MessageStatus.sent;
               }
               doc.messageChangesEmit = MessageChangesEmit.messageStatus;
-              console.log("after updating message status doc", doc)
+              console.log(
+                'PouchDbService:: after updating message status doc',
+                doc
+              );
               return doc;
             })
             .then(() => {
@@ -353,11 +270,13 @@ export class PouchDbService {
                 success: true,
               });
             })
-            .catch((err) => { reject(err) });
+            .catch((err) => {
+              reject(err);
+            });
         });
       } catch (error) {
         console.error(
-          'Message status save to message-db-upsert-error',
+          'PouchDbService:: Message status save to message-db-upsert-error',
           error
         );
         return Promise.reject(error);
@@ -369,13 +288,8 @@ export class PouchDbService {
     }
   }
 
-  async saveMessageToMessageDb(
-    message: any
-  ) {
-    console.log(
-      'PouchDbService::saveMessageToMessageDb: ',
-      message
-    );
+  async saveMessageToMessageDb(message: any) {
+    console.log('PouchDbService::saveMessageToMessageDb: ', message);
     const isDbAvailable = await this.getMessageDbStatus();
     if (this.authService.isLoggedIn && isDbAvailable) {
       message._id = message.messageId;
@@ -386,32 +300,36 @@ export class PouchDbService {
               //doc priority is most
               if (doc.deliveredUsers) {
                 message.deliveredUsers = doc.deliveredUsers;
-              }
-              else if (!message.deliveredUsers) {
+              } else if (!message.deliveredUsers) {
                 message.deliveredUsers = new Set<string>();
               }
               if (doc.readUsers) {
                 message.readUsers = doc.readUsers;
-              }
-              else if (!message.readUsers) {
+              } else if (!message.readUsers) {
                 message.readUsers = new Set<string>();
               }
-              message.messageStatus = doc.messageStatus || message.messageStatus;
+              message.messageStatus =
+                doc.messageStatus || message.messageStatus;
               doc = message;
               doc.messageChangesEmit = MessageChangesEmit.message;
               return doc;
             })
             .then(() => {
-              console.log("after updating message doc", message)
+              console.log(
+                'PouchDbService:: after updating message doc',
+                message
+              );
               resolve({
                 success: true,
               });
             })
-            .catch((err) => { reject(err) });
+            .catch((err) => {
+              reject(err);
+            });
         });
       } catch (error) {
         console.error(
-          'PouchDbManagerService: message-db-upsert-error',
+          'PouchDbService:: PouchDbManagerService: message-db-upsert-error',
           error
         );
         return Promise.reject(error);
@@ -435,13 +353,14 @@ export class PouchDbService {
         if (change && change.doc) {
           if (change.doc.messageChangesEmit == MessageChangesEmit.message) {
             this.messageChanges.next(change);
-          }
-          else if (change.doc.messageChangesEmit == MessageChangesEmit.messageStatus) {
+          } else if (
+            change.doc.messageChangesEmit == MessageChangesEmit.messageStatus
+          ) {
             this.msgStatusChanges.next(change);
           }
         }
       })
-      .on('complete', (info) => { })
+      .on('complete', (info) => {})
       .on('error', (error) => {
         return null;
       });
@@ -452,16 +371,13 @@ export class PouchDbService {
     if (this.authService.isLoggedIn && isDbAvailable) {
       const response = await this.messageDB.find({
         selector: {
-          $or: [
-            { to: roomId },
-          ]
+          $or: [{ to: roomId }],
         },
         //use_index: this.msgStatusIndex_msgId_status_docName,
       });
       return response.docs || [];
-    }
-    else {
-      console.warn("messageDb is not available");
+    } else {
+      console.warn('PouchDbService:: messageDb is not available');
     }
   }
 
@@ -472,25 +388,18 @@ export class PouchDbService {
         selector: {
           $or: [
             {
-              $and: [
-                { to: Utility.getCurrentUserId() },
-                { from: roomId }
-              ]
+              $and: [{ to: Utility.getCurrentUserId() }, { from: roomId }],
             },
             {
-              $and: [
-                { to: roomId },
-                { from: Utility.getCurrentUserId() }
-              ]
-            }
-          ]
+              $and: [{ to: roomId }, { from: Utility.getCurrentUserId() }],
+            },
+          ],
         },
         //use_index: this.msgStatusIndex_msgId_status_docName,
       });
       return response.docs || [];
-    }
-    else {
-      console.warn("messageDb is not available");
+    } else {
+      console.warn('PouchDbService:: messageDb is not available');
     }
   }
 
@@ -509,23 +418,26 @@ export class PouchDbService {
   }
 
   async createChatRoomDB() {
-    return new Promise(async(resolve,reject)=>{
-    const isDbAvailable = await this.getChatRoomDbStatus();
-    if (!this.authService.isLoggedIn || isDbAvailable) return;
-    try {
-      this.chatRoomDB = new PouchDB(this.chatRoomDBName, {
-        revs_limit: 1,
-        auto_compaction: true,
-      });
-      console.log("Created chatRoomDB done", this.chatRoomDB)
-      resolve(this.chatRoomDB);
-    } catch (err) {
-      console.error(
-        'PouchDbManagerService: error in creating chatRoom db instance'
-      );
-      reject(err);
-    }
-  });
+    return new Promise(async (resolve, reject) => {
+      const isDbAvailable = await this.getChatRoomDbStatus();
+      if (!this.authService.isLoggedIn || isDbAvailable) return;
+      try {
+        this.chatRoomDB = new PouchDB(this.chatRoomDBName, {
+          revs_limit: 1,
+          auto_compaction: true,
+        });
+        console.log(
+          'PouchDbService:: Created chatRoomDB done',
+          this.chatRoomDB
+        );
+        resolve(this.chatRoomDB);
+      } catch (err) {
+        console.error(
+          'PouchDbService:: PouchDbManagerService: error in creating chatRoom db instance'
+        );
+        reject(err);
+      }
+    });
   }
 
   async getChatRoomDbStatus() {
@@ -542,19 +454,19 @@ export class PouchDbService {
 
   async saveRoomsDataToChatRoomDb(chatRooms: any[]) {
     const promises = [];
-    chatRooms.forEach(room => {
+    chatRooms.forEach((room) => {
       promises.push(this.saveRoomDataToChatRoomDb(room));
     });
-    const res = Promise.all(promises)
-      .catch(err => {
-        console.error("Save rooms data to chatRoomDb error", err);
-      })
+    const res = Promise.all(promises).catch((err) => {
+      console.error(
+        'PouchDbService:: Save rooms data to chatRoomDb error',
+        err
+      );
+    });
     return res;
   }
 
-  async saveRoomDataToChatRoomDb(
-    roomData: any,
-  ) {
+  async saveRoomDataToChatRoomDb(roomData: any) {
     const isDbAvailable = await this.getChatRoomDbStatus();
     if (this.authService.isLoggedIn && isDbAvailable) {
       try {
@@ -576,7 +488,7 @@ export class PouchDbService {
         });
       } catch (error) {
         console.error(
-          'PouchDbManagerService: chatRoom-db-upsert-error',
+          'PouchDbService:: PouchDbManagerService: chatRoom-db-upsert-error',
           error
         );
         return Promise.reject(error);
@@ -613,7 +525,7 @@ export class PouchDbService {
         });
       } catch (error) {
         console.error(
-          'last messages chatRoom-db-upsert-error',
+          'PouchDbService:: last messages chatRoom-db-upsert-error',
           error
         );
         return Promise.reject(error);
@@ -649,34 +561,34 @@ export class PouchDbService {
   async getChatRoomByRoomId(roomId) {
     const isDbAvailable = await this.getChatRoomDbStatus();
     if (this.authService.isLoggedIn && isDbAvailable) {
-      const room = await this.chatRoomDB.find({
-        selector: {
-          id: roomId,
-        },
-      })
+      const room = await this.chatRoomDB
+        .find({
+          selector: {
+            id: roomId,
+          },
+        })
         .catch((err) => {
-          console.error("Get all chat room docs error", err);
+          console.error('PouchDbService:: Get all chat room docs error', err);
         });
       return room.docs && room.docs[0];
-    }
-    else {
-      console.warn("chatRoomDB is not available");
+    } else {
+      console.warn('PouchDbService:: chatRoomDB is not available');
     }
   }
 
   async getAllChatRoom() {
     const isDbAvailable = await this.getChatRoomDbStatus();
     if (this.authService.isLoggedIn && isDbAvailable) {
-      const response = await this.chatRoomDB.allDocs({
-        include_docs: true
-      })
+      const response = await this.chatRoomDB
+        .allDocs({
+          include_docs: true,
+        })
         .catch(function (err) {
-          console.error("Get all chat room docs error", err);
+          console.error('PouchDbService:: Get all chat room docs error', err);
         });
       return response.rows || [];
-    }
-    else {
-      console.warn("chatRoomDB is not available");
+    } else {
+      console.warn('PouchDbService:: chatRoomDB is not available');
     }
   }
 
@@ -691,19 +603,22 @@ export class PouchDbService {
             return new Promise((resolve, reject) => {
               let request = indexedDB.deleteDatabase(db.name);
               request.onblocked = (e) => {
-                console.log('onblocked', e);
+                console.log('PouchDbService:: onblocked', e);
               };
               request.onsuccess = (res) => {
-                console.log('DB delete success for', db.name);
+                console.log('PouchDbService:: DB delete success for', db.name);
                 resolve(request.result);
               };
               request.onerror = (err) => {
-                console.log('DB delete error for', db.name, err);
+                console.log(
+                  'PouchDbService:: DB delete error for',
+                  db.name,
+                  err
+                );
                 reject(request.error);
               };
             });
-          }
-          else return null;
+          } else return null;
         })
       );
     }

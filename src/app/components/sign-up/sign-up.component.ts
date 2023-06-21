@@ -81,7 +81,7 @@ export class SignUpComponent implements OnInit {
       .catch(err => {
         this.loading = false;
         window.alert(err.message);
-        console.error("Signup error: ", err);
+        console.error("SignUpComponent:: Signup error: ", err);
       });
   }
 

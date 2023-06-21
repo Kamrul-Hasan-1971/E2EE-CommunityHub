@@ -1,24 +1,32 @@
-import { AfterViewInit, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, NgForm, Validators } from '@angular/forms';
-import { BehaviorSubject, debounceTime, Subject, Subscription, takeUntil, tap } from 'rxjs';
-//import { PayloadProcessorService } from 'src/app/services/payloadProcessor/payload-processor.service';
-//import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import { FormBuilder, FormGroup} from '@angular/forms';
+import {
+  BehaviorSubject,
+  debounceTime,
+  Subject,
+  Subscription,
+  takeUntil,
+  tap,
+} from 'rxjs';
 import { Utility } from 'src/app/utility/utility';
-import { RoomService } from '../../../services/room/room.service';
-import * as uuid from 'uuid';
+import { RoomService } from '../../services/room/room.service';
 import { MqttUtility } from 'src/app/utility/mqtt-utility/mqtt-utility';
 import { MqttNonPerTopic } from 'src/app/models/mqtt-non-persistent-topic-enum';
 import { MqttConnectorService } from 'src/app/services/mqtt/mqtt-connector.service';
 import { EventService } from 'src/app/services/event.service';
 import { DataStateService } from 'src/app/services/data-state.service';
 import { RoomData } from 'src/app/interfaces/roomData';
-import { PouchDbService } from 'src/app/services/clientDB/pouch-db.service';
-
 
 @Component({
   selector: 'app-chat-area',
   templateUrl: './chat-area.component.html',
-  styleUrls: ['./chat-area.component.scss']
+  styleUrls: ['./chat-area.component.scss'],
 })
 export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   subs: Subscription;
@@ -35,25 +43,20 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   isGroupRoom: boolean = false;
   room: RoomData;
 
-  lastActiveTime = "";
+  lastActiveTime = '';
   destroyMainStatus = new Subject<any>();
-  //mainStatusPayload: any;
   statusTTL = 60000;
   isOnline: boolean = false;
   lastSeen: any;
-
 
   constructor(
     private roomService: RoomService,
     private cdRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
     private mqttConnectorService: MqttConnectorService,
-    //private payloadProcessorService: PayloadProcessorService,
     private eventService: EventService,
-    private dataStateService: DataStateService,
-    private pouchDbService: PouchDbService
-  ) {
-  }
+    private dataStateService: DataStateService
+ ) {}
 
   activeStatusSubscription() {
     this.destroyMainStatus = new Subject<any>();
@@ -61,14 +64,17 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
       .pipe(takeUntil(this.destroyMainStatus))
       .subscribe((statusPayload: any) => {
         if (statusPayload) {
-          console.log('user-online-status-payload', statusPayload);
-          this.setRoomActiveStatusToRoomData(statusPayload.from, statusPayload.status.lastSeen);
+          console.log('app-chat-area:: user-online-status-payload', statusPayload);
+          this.setRoomActiveStatusToRoomData(
+            statusPayload.from,
+            statusPayload.status.lastSeen
+          );
           if (statusPayload.from == Utility.getCurrentActiveRoomId()) {
-            this.handleUserOnlineStatus(statusPayload.status.lastSeen, statusPayload.status.isOnline);
+            this.handleUserOnlineStatus(
+              statusPayload.status.lastSeen,
+              statusPayload.status.isOnline
+            );
           }
-          // this.mainStatusPayload = statusPayload;
-          //console.log('ChatThread: ----last-seen-time----', this.lastSeen);
-          // console.log('ChatThread: cd calling detectchanges from lastseen status update!');
         }
       });
   }
@@ -77,8 +83,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     let room = await this.roomService.getRoomDataByRoomID(roomId);
     if (room) {
       room.lastSeen = lastSeen;
-      // this.cdRef.detectChanges();
-      //this.pouchDbService.saveRoomDataToChatRoomDb(room);
     }
   }
 
@@ -94,7 +98,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   isActive(lastSeen: number) {
     const now = new Date().getTime();
     const difference = now - lastSeen;
-    console.log('Onlinestatus now', now, "lastseen", lastSeen, "difference", difference);
+    console.log('app-chat-area:: Onlinestatus now',now,'lastseen',lastSeen,'difference',difference);
     return difference <= this.statusTTL;
   }
 
@@ -116,13 +120,15 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.eventService.typingPayload$
       .pipe(takeUntil(this.destroyTyping))
       .subscribe(async (payload: any) => {
-        console.log('ChatThread: Typing-payload', payload);
+        console.log('app-chat-area:: Typing-payload', payload);
         const typingPayload = { ...payload };
         if (typingPayload.roomId == Utility.getCurrentActiveRoomId()) {
-          this.isGroupRoom = Utility.getCurrentActiveRoomId() == Utility.getCommunitityId();
-          this.typingName = this.dataStateService.getRoomNameFromRoomState(typingPayload.from);
+          this.isGroupRoom =
+            Utility.getCurrentActiveRoomId() == Utility.getCommunitityId();
+          this.typingName = this.dataStateService.getRoomNameFromRoomState(
+            typingPayload.from
+          );
           this.typing.next(true);
-          //this.changeDetectorRef.detectChanges();
           this.startTypingTimer();
         }
       });
@@ -133,50 +139,44 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.typingTimer = setTimeout(() => {
       this.typingName = '';
       this.typing.next(false);
-      // this.changeDetectorRef.detectChanges();
     }, 2500);
   }
 
   inputBoxVisibilitySubscription() {
-    this.roomService.inputBoxVisibilitySub.subscribe((inputBoxVisibility: boolean) => {
-      this.inputBoxVisibility = inputBoxVisibility;
-    })
+    this.roomService.inputBoxVisibilitySub.subscribe(
+      (inputBoxVisibility: boolean) => {
+        this.inputBoxVisibility = inputBoxVisibility;
+      }
+    );
   }
 
   roomChangeSubscription() {
     this.roomService.roomeChange.subscribe(async (roomId) => {
-
-     // this.lastSeen = null;
-      if(this.room && this.room.id != Utility.getCommunitityId())
-      {
-        //delete this.room['lastSeen'];
-        const previousRoomTopic = MqttUtility.parseMqttTopic(MqttNonPerTopic.activeStatus,this.room.id);
-        this.mqttConnectorService.unsubscribeSigleNonPersistentTopic(previousRoomTopic);
+      if (this.room && this.room.id != Utility.getCommunitityId()) {
+        const previousRoomTopic = MqttUtility.parseMqttTopic(
+          MqttNonPerTopic.activeStatus,
+          this.room.id
+        );
+        this.mqttConnectorService.unsubscribeSigleNonPersistentTopic(
+          previousRoomTopic
+        );
       }
-      if(roomId != Utility.getCommunitityId()){
-        const roomTopic = MqttUtility.parseMqttTopic(MqttNonPerTopic.activeStatus,roomId);
+      if (roomId != Utility.getCommunitityId()) {
+        const roomTopic = MqttUtility.parseMqttTopic(
+          MqttNonPerTopic.activeStatus,
+          roomId
+        );
         this.mqttConnectorService.subscribeToNonPersistentClient([roomTopic]);
       }
 
-
       this.sendMessageForm.reset();
-      this.isGroupRoom = Utility.getCurrentActiveRoomId() == Utility.getCommunitityId();
+      this.isGroupRoom =
+        Utility.getCurrentActiveRoomId() == Utility.getCommunitityId();
       this.room = await this.roomService.getRoomDataByRoomID(roomId);
 
-      // if (this.room.lastSeen) {
-      //   this.handleUserOnlineStatus(this.room.lastSeen, false);
-      // }
-      // else 
-      // if(this.room.lastUpdated)
-      // {
-      //  // this.handleUserOnlineStatus(this.room.lastUpdated, false);
-      // }
-      // else{
-        this.lastSeen = null;
-        this.isOnline = false;
-        //this.cdRef.detectChanges();
-      //}
-    })
+      this.lastSeen = null;
+      this.isOnline = false;
+    });
   }
 
   initSenMessageForm() {
@@ -191,10 +191,13 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
         takeUntil(this.destroyAllGlobalSubscriptionSubject),
         debounceTime(300),
         tap(() => {
-          console.log('ChatThread: messageControl.valueChanges');
+          console.log('app-chat-area:: messageControl.valueChanges');
           const now = new Date().getTime();
           if (now - this.lastTypingStatusSendTime > 5000) {
-            if (this.sendMessageForm.value.sendMessage && this.sendMessageForm.value.sendMessage.length > 0) {
+            if (
+              this.sendMessageForm.value.sendMessage &&
+              this.sendMessageForm.value.sendMessage.length > 0
+            ) {
               this.lastTypingStatusSendTime = now;
               this.publishTypingStatus();
             }
@@ -206,18 +209,21 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   publishTypingStatus() {
     const typingPayload = {
-      roomId: (Utility.getCurrentActiveRoomId() == Utility.getCommunitityId()) ? Utility.getCommunitityId() : Utility.getCurrentUserId(),
+      roomId:
+        Utility.getCurrentActiveRoomId() == Utility.getCommunitityId()
+          ? Utility.getCommunitityId()
+          : Utility.getCurrentUserId(),
       type: 'typing',
       from: Utility.getCurrentUserId(),
     };
-    console.log(
-      'publishing typing for group',
-      typingPayload,
-      'in',
-      MqttUtility.parseMqttTopic(MqttNonPerTopic.typing, Utility.getCurrentActiveRoomId())
-    );
+    console.log('app-chat-area:: publishing typing for group',typingPayload,'in',MqttUtility.parseMqttTopic(MqttNonPerTopic.typing,Utility.getCurrentActiveRoomId()));
     this.mqttConnectorService.publishToNonPersistentClient(
-      MqttUtility.parseMqttTopic(MqttNonPerTopic.typing, Utility.getCurrentActiveRoomId()), typingPayload);
+      MqttUtility.parseMqttTopic(
+        MqttNonPerTopic.typing,
+        Utility.getCurrentActiveRoomId()
+      ),
+      typingPayload
+    );
   }
 
   async formSubmit() {
@@ -232,6 +238,5 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy() {
     this.destroyAllGlobalSubscriptionSubject.next(null);
     this.destroyAllGlobalSubscriptionSubject.complete();
-    console.log("5");
   }
 }

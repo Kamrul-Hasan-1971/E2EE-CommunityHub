@@ -16,20 +16,6 @@
     background-color: #EDEDED;
     display: flex;
 
-    // &__room-name {
-    //   flex:1;
-    //   margin-left: 20px;
-
-    //   h4 {
-    //     margin-bottom: 0;
-    //     font-weight: bold;
-    //   }
-
-    //   p {
-    //     font-size: small;
-    //   }
-    // }
-
     &__right>button mat-icon {
       color: gray;
       font-size: 24px;
@@ -41,28 +27,16 @@
   }
 
   &__body_parent {
-    // overflow-x: hidden;
     overflow-y: scroll;
     flex: 1;
-    //overflow: hidden;
     padding-right: 5px;
     background-color: #d9e5e1;
 
     &__body_child {
       flex: 1;
-      // background-color: #d9e5e1;
-      //background-image: url("https://i.pinimg.com/originals/ab/ab/60/abab60f06ab52fa7846593e6ae0c9a0b.png");
-      //background-repeat: repeat;
-      //background-position: center;
-      // overflow-y: scroll;
-      //overflow: hidden;
     }
   }
 
-  // &__body_parent:hover{
-  //   overflow-y: auto;
-  //   padding-right: 0 !important;
-  // }
 
   &__footer {
     padding-left: 1%;
@@ -84,7 +58,6 @@
       background-color: #009688;
       border-radius: 0;
       border-color: #888;
-      //color: #009688;
     }
 
     form {
@@ -95,7 +68,6 @@
     &__send-message {
       outline: none;
       border: 1px solid lightgray;
-      //border-radius: 30px;
       flex: 1;
       padding: 10px 10px 10px 20px;
 

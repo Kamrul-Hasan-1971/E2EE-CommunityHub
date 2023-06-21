@@ -18,8 +18,6 @@ export class DataStateService {
     hasUnreadMessage: false
   }
 
-  constructor() { }
-
   setRoomState(roomId, room)
   {
     this.roomsState.set(roomId,room);
@@ -32,7 +30,6 @@ export class DataStateService {
     }
     if(roomId == Utility.getCurrentUserId()){
       return "You";
-      //return Utility.getCurrentUser().name;
     }
     return "";
   }
@@ -42,7 +39,7 @@ export class DataStateService {
     if(!this.roomsState.has(roomId)) this.roomsState.set(roomId,null);
     return this.roomsState.get(roomId);
   }
- 
+
   getRoomsConversationState(roomId)
   {
     if (!this.roomsConversationState.has(roomId)){
@@ -50,7 +47,7 @@ export class DataStateService {
     }
     return this.roomsConversationState.get(roomId);
   }
-  
+
   addMessageToRoomConversationState(roomId, messageObj)
   {
     if (!this.roomsConversationState.has(roomId)){

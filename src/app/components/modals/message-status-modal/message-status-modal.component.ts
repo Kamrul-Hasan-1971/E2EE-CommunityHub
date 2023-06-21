@@ -19,7 +19,7 @@ export class MessageStatusModalComponent implements OnInit {
     }
 
   ngOnInit(): void {
-    console.log(this.data.message);
+    console.log("MessageStatusModalComponent:: ",this.data.message);
     this.message = this.data.message;
   }
 

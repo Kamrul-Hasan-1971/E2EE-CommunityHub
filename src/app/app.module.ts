@@ -4,7 +4,6 @@ import { BrowserModule } from '@angular/platform-browser';
 // import { IMqttServiceOptions, MqttModule } from 'ngx-mqtt';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-
 import { AngularFireModule } from '@angular/fire/compat';
 import { AngularFireAuthModule } from '@angular/fire/compat/auth';
 import { AngularFireStorageModule } from '@angular/fire/compat/storage';
@@ -16,18 +15,17 @@ import { AppComponent } from './app.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
-
 // component
 import { SignInComponent } from './components/sign-in/sign-in.component';
 import { SignUpComponent } from './components/sign-up/sign-up.component';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
 import { VerifyEmailComponent } from './components/verify-email/verify-email.component';
 import { MainContainerComponent } from './components/main-container/main-container.component';
-import { SidebarComponent } from './components/main-container/sidebar/sidebar.component';
-import { SidebarContentComponent } from './components/main-container/sidebar/sidebar-content/sidebar-content.component';
-import { ChatDefaultPageComponent } from './components/main-container/chat-area/chat-default-page/chat-default-page.component';
-import { ChatAreaComponent } from './components/main-container/chat-area/chat-area.component';
-import { ChatRoomComponent } from './components/main-container/chat-area/chat-room/chat-room.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { SidebarContentComponent } from './components/sidebar-content/sidebar-content.component';
+import { ChatDefaultPageComponent } from './components/chat-default-page/chat-default-page.component';
+import { ChatAreaComponent } from './components/chat-area/chat-area.component';
+import { ChatRoomComponent } from './components/chat-room/chat-room.component';
 
 import { AuthService } from './services/auth/auth.service';
 
@@ -63,7 +61,7 @@ import { MatDialogModule } from '@angular/material/dialog';
     ForgotPasswordComponent,
     VerifyEmailComponent,
     LoaderComponent,
-    MessageStatusModalComponent
+    MessageStatusModalComponent,
     // LoginComponent,
     // RegisterComponent
   ],
@@ -74,7 +72,7 @@ import { MatDialogModule } from '@angular/material/dialog';
     MaterialModule,
     FormsModule,
     RouterModule,
-   // MqttModule.forRoot(MQTT_SERVICE_OPTIONS),
+    // MqttModule.forRoot(MQTT_SERVICE_OPTIONS),
     FlexLayoutModule,
     BrowserModule,
     ReactiveFormsModule,
@@ -84,13 +82,11 @@ import { MatDialogModule } from '@angular/material/dialog';
     AngularFireStorageModule,
     AngularFireDatabaseModule,
     HttpClientModule,
-    MatDialogModule
+    MatDialogModule,
     // provideFirebaseApp(() => initializeApp(env.firebase)),
     // provideAuth(() => getAuth())
   ],
-  providers: [
-    AuthService,
-  ],
-  bootstrap: [AppComponent]
+  providers: [AuthService],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

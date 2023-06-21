@@ -5,7 +5,6 @@ import { MqttNonPerCommonTopic } from 'src/app/models/mqtt-non-persistent-topic-
 import { PouchDbService } from 'src/app/services/clientDB/pouch-db.service';
 import { MqttConnectorService } from 'src/app/services/mqtt/mqtt-connector.service';
 import { PayloadProcessorService } from 'src/app/services/payloadProcessor/payload-processor.service';
-//import { SignalManagerService } from 'src/app/services/signal/signal-manager.service';
 import { MqttUtility } from 'src/app/utility/mqtt-utility/mqtt-utility';
 import { Utility } from 'src/app/utility/utility';
 import { AuthService } from '../../services/auth/auth.service';
@@ -16,18 +15,12 @@ import { UserService } from '../../services/users/user.service';
   templateUrl: './sign-in.component.html',
   styleUrls: ['./sign-in.component.scss'],
 })
-
 export class SignInComponent implements OnInit {
-
-  //form
   loginForm: FormGroup;
-
-  //variable
   returnUrl: string;
   loading = false;
   submitted = false;
-  emailErrorMessage = "";
-
+  emailErrorMessage = '';
 
   constructor(
     public authService: AuthService,
@@ -35,11 +28,10 @@ export class SignInComponent implements OnInit {
     private route: ActivatedRoute,
     private formBuilder: FormBuilder,
     private userService: UserService,
-    //private signalManagerService: SignalManagerService,
     private mqttConnectorService: MqttConnectorService,
     private pouchDbService: PouchDbService,
     private payloadProcessorService: PayloadProcessorService
-  ) { }
+  ) {}
 
   ngOnInit() {
     if (this.authService.isLoggedIn) {
@@ -50,20 +42,21 @@ export class SignInComponent implements OnInit {
   }
 
   // convenience getter for easy access to form fields
-  get f() { return this.loginForm.controls; }
+  get f() {
+    return this.loginForm.controls;
+  }
 
   initSignInForm() {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
     });
   }
 
   updateEmailErrorMessage() {
     if (this.loginForm.controls['email']['errors']['required']) {
       this.emailErrorMessage = 'Email is required';
-    }
-    else if (this.loginForm.controls['email']['errors']['email']) {
+    } else if (this.loginForm.controls['email']['errors']['email']) {
       this.emailErrorMessage = 'Email is invalid';
     }
   }
@@ -73,34 +66,50 @@ export class SignInComponent implements OnInit {
   }
 
   async initiateAfterSignIn() {
-    let currentAuthUser = await this.authService.getCurrentAuthUser()
-      .catch(error => {
+    let currentAuthUser = await this.authService
+      .getCurrentAuthUser()
+      .catch((error) => {
         window.alert(error);
-        console.error(error);
+        console.error(
+          'SignInComponent:: -> initiateAfterSignIn -> error',
+          error
+        );
         this.loading = false;
-        return
+        return;
       });
 
-    let currentUser: any = await this.userService.getCurrentUser(currentAuthUser.uid)
-      .catch(error => {
+    let currentUser: any = await this.userService
+      .getCurrentUser(currentAuthUser.uid)
+      .catch((error) => {
         this.loading = false;
         window.alert(error);
-        console.error(error);
+        console.error(
+          'SignInComponent:: -> initiateAfterSignIn -> error',
+          error
+        );
         this.loading = false;
       });
     if (currentAuthUser.emailVerified && !currentUser.emailVerified) {
       currentUser.emailVerified = true;
-      let newUserCreatePublishTopic = MqttUtility.parseMqttTopic(MqttNonPerCommonTopic.userCreate, Utility.getCommonTopicId());
-      console.log("Publishing new user create in toopic", newUserCreatePublishTopic, "currentUser payload", currentUser)
-      this.mqttConnectorService.publishToNonPersistentClient(newUserCreatePublishTopic, currentUser);
+      let newUserCreatePublishTopic = MqttUtility.parseMqttTopic(
+        MqttNonPerCommonTopic.userCreate,
+        Utility.getCommonTopicId()
+      );
+      console.log(
+        'SignInComponent:: Publishing new user create in toopic',
+        newUserCreatePublishTopic,
+        'currentUser payload',
+        currentUser
+      );
+      this.mqttConnectorService.publishToNonPersistentClient(
+        newUserCreatePublishTopic,
+        currentUser
+      );
 
       Utility.setCurrentUser(currentUser);
       await this.userService.updateUser(currentUser);
-      // await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
     }
     await this.pouchDbService.init();
-    //this.signalManagerService.init();
-    //await this.signalManagerService.initializeAsync(Utility.getCurrentUserId());
     this.payloadProcessorService.payloadProcessorServiceInit();
     this.mqttConnectorService.mqttConnectorServiceInit();
     this.loading = false;
@@ -118,19 +127,18 @@ export class SignInComponent implements OnInit {
     const user = {
       email: this.loginForm.value.email,
       password: this.loginForm.value.password,
-    }
+    };
     this.loading = true;
-    this.authService.SignIn(user.email, user.password)
+    this.authService
+      .SignIn(user.email, user.password)
       .then(async (signInResponse) => {
         if (!signInResponse.user.emailVerified) {
-          //await this.authService.SignOut();
           this.redirectToVerifyEmailAdress();
-        }
-        else {
+        } else {
           await this.initiateAfterSignIn();
         }
       })
-      .catch(error => {
+      .catch((error) => {
         var errorCode = error.code;
         var errorMessage = error.message;
         if (errorCode === 'auth/wrong-password') {
@@ -138,21 +146,21 @@ export class SignInComponent implements OnInit {
         } else {
           window.alert(errorMessage);
         }
-        console.error(error);
+        console.error('SignInComponent:: -> signIn -> error', error);
         this.loading = false;
-        return
-      })
+        return;
+      });
   }
 
   redirectToSignUp() {
-    this.router.navigate(['/sign-up'])
+    this.router.navigate(['/sign-up']);
   }
 
   redirectToForgotPassword() {
-    this.router.navigate(['/forgot-password'])
+    this.router.navigate(['/forgot-password']);
   }
 
   redirectToVerifyEmailAdress() {
-    this.router.navigate(['/verify-email-address'])
+    this.router.navigate(['/verify-email-address']);
   }
 }

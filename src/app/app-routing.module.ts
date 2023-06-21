@@ -2,8 +2,8 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 //component
-import { ChatDefaultPageComponent } from './components/main-container/chat-area/chat-default-page/chat-default-page.component';
-import { ChatRoomComponent } from './components/main-container/chat-area/chat-room/chat-room.component';
+import { ChatDefaultPageComponent } from './components/chat-default-page/chat-default-page.component';
+import { ChatRoomComponent } from './components/chat-room/chat-room.component';
 import { MainContainerComponent } from './components/main-container/main-container.component';
 import { SignInComponent } from './components/sign-in/sign-in.component';
 import { SignUpComponent } from './components/sign-up/sign-up.component';
@@ -21,23 +21,23 @@ const routes: Routes = [
     children: [
       {
         path: 'room/:id',
-        component: ChatRoomComponent
+        component: ChatRoomComponent,
       },
       {
         path: '',
-        component: ChatDefaultPageComponent
-      }
+        component: ChatDefaultPageComponent,
+      },
     ],
   },
   { path: 'sign-in', component: SignInComponent },
   { path: 'sign-up', component: SignUpComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'verify-email-address', component: VerifyEmailComponent }, 
-  { path: '**', redirectTo: '' }
+  { path: 'verify-email-address', component: VerifyEmailComponent },
+  { path: '**', redirectTo: '' },
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

@@ -31,7 +31,7 @@ export class RoomService {
     if(roomId == Utility.getCommunitityId()) return this.dataStateService.communityRoom;
     let room = this.dataStateService.getRoomState(roomId);
     if(room) {
-      console.log("Get roomdata from state roomId",roomId,"room",room)
+      console.log("RoomService:: Get roomdata from state roomId",roomId,"room",room)
       return room;
     }
 
@@ -40,19 +40,19 @@ export class RoomService {
     this.dataStateService.setRoomState(roomId,room);
     room = this.dataStateService.getRoomState(roomId);
     if(room) {
-      console.log("Get roomdata from clientDb roomId",roomId,"room",room)
+      console.log("RoomService:: Get roomdata from clientDb roomId",roomId,"room",room)
       return room;
     }
 
     //3rd try from server
     room = await this.userService.getUserById(roomId) as RoomData;
     if(room) {
-      console.log("Get roomdata from server roomId",roomId,"room",room)
+      console.log("RoomService:: Get roomdata from server roomId",roomId,"room",room)
       return room;
     }
 
     console.log("No roomdata for this roomId",roomId);
     return null;
   }
- 
+
 }
