@@ -27,7 +27,7 @@ export class RoomService {
 
   async getRoomDataByRoomID(roomId)
   {
-    //1st try data state
+    //1st try from data state
     if(roomId == Utility.getCommunitityId()) return this.dataStateService.communityRoom;
     let room = this.dataStateService.getRoomState(roomId);
     if(room) {
@@ -35,7 +35,7 @@ export class RoomService {
       return room;
     }
 
-    //2nd try from clienDb
+    //2nd try from clientDb
     room = await this.pouchDbService.getChatRoomByRoomId(roomId);
     this.dataStateService.setRoomState(roomId,room);
     room = this.dataStateService.getRoomState(roomId);
@@ -44,7 +44,7 @@ export class RoomService {
       return room;
     }
 
-    //3rd try from server
+    //3rd fetch from server
     room = await this.userService.getUserById(roomId) as RoomData;
     if(room) {
       console.log("RoomService:: Get roomdata from server roomId",roomId,"room",room)

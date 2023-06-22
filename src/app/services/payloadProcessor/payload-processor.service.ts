@@ -25,12 +25,8 @@ export class PayloadProcessorService {
 
   payloadProcessorServiceInit() {
     this.subscribeTomqttPayload$();
-    this.init();
   }
 
-  init() {
-
-  }
 
   async decryptMessage(senderId, message: string) {
     return message;

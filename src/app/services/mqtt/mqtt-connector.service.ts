@@ -26,13 +26,8 @@ export class MqttConnectorService {
   };
 
   mqttPayload$: Subject<any> = new Subject<any>();
-  // mqttMeesagePayload$: Subject<any> = new Subject<any>();
   constructor(private pouchDbService: PouchDbService) { }
 
-  ngOninit() {
-    // this.mqttPayload$ = new Subject<any>();
-    // this.mqttMeesagePayload$ = new Subject<any>();
-  }
 
   mqttConnectorServiceInit() {
     this.connect();
@@ -51,7 +46,7 @@ export class MqttConnectorService {
       }
     );
     this.persistentClient.on('connect', this.persistentConnectCallBack);
-    this.persistentClient.on('subAck', this.fun);
+    this.persistentClient.on('subAck', this.persistentClientSubAck);
     this.persistentClient.on('error', this.connectErrorCallBack);
     this.persistentClient.on('message', this.mqttMessageCallBack);
 
@@ -66,15 +61,17 @@ export class MqttConnectorService {
       }
     );
     this.nonPersistentClient.on('connect', this.nonPersistentConnectCallBack);
-    this.nonPersistentClient.on('subAck', this.fun2);
+    this.nonPersistentClient.on('subAck', this.nonPersistentClientSubAck);
     this.nonPersistentClient.on('error', this.nonPerConnectErrorCallBack);
     this.nonPersistentClient.on('message', this.mqttMessageCallBack);
   }
-  fun = (response: any) => {
-    console.log("persistentClient suback", response);
+
+  persistentClientSubAck = (response: any) => {
+    console.log("MqttConnectorService: persistentClient suback", response);
   }
-  fun2 = (response: any) => {
-    console.log("nonPersistentClient suback", response);
+
+  nonPersistentClientSubAck = (response: any) => {
+    console.log("MqttConnectorService: nonPersistentClient suback", response);
   }
 
   persistentConnectCallBack = (response: any) => {
